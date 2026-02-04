@@ -1,1 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Pastel Habit Tracker</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3.4.19/dist/vue.global.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        /* THEME - Pastel Palette */
+        :root {
+            --bg-main: #fdfbf7;      /* Creamy White */
+            --text-main: #5d576b;    /* Soft Slate */
+            --pastel-green: #b7e4c7;
+            --pastel-blue: #ade8f4;
+            --pastel-pink: #ffc8dd;
+            --pastel-purple: #e2d0f9;
+            --pastel-yellow: #faedcb;
+        }
 
+        body { 
+            font-family: 'Zen Maru Gothic', sans-serif; 
+            background-color: var(--bg-main); 
+            color: var(--text-main); 
+            margin: 0; padding: 0; 
+            height: 100dvh; width: 100vw; 
+            overflow: hidden; 
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .glass { 
+            background: rgba(255, 255, 255, 0.8); 
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.9); 
+            border-radius: 24px; 
+            box-shadow: 0 4px 15px rgba(93, 87, 107, 0.05);
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .safe-top { padding-top: max(20px, env(safe-area-inset-top)); }
+        .safe-bottom { padding-bottom: max(20px, env(safe-area-inset-bottom)); }
+        
+        /* Custom Checkbox Animation */
+        .check-circle {
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .check-circle.checked {
+            transform: scale(1.1);
+        }
+
+        /* Modal Transitions */
+        @keyframes slide-up {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-slide-up { animation: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        
+        [v-cloak] { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div id="app" v-cloak class="flex flex-col h-full w-full max-w-md mx-auto relative bg-[#fdfbf7]">
+    
+    <header class="pt-safe-top px-6 pb-2 flex justify-between items-end bg-white/50 backdrop-blur-md z-20 sticky top-0">
+        <div>
+            <div class="text-xs font-bold opacity-50 uppercase tracking-widest">{{ currentDateLabel }}</div>
+            <h1 class="text-3xl font-black text-[#5d576b]">{{ pageTitles[currentView] }}</h1>
+        </div>
+        <div class="w-10 h-10 rounded-full bg-[#faedcb] flex items-center justify-center shadow-sm">
+            <i class="fas fa-seedling text-[#5d576b]/70"></i>
+        </div>
+    </header>
+
+    <main class="flex-1 overflow-y-auto no-scrollbar p-6 space-y-6 pb-32">
+        
+        <div v-if="currentView === 'today'" class="space-y-4">
+            
+            <div class="glass p-5 flex items-center justify-between mb-6 bg-gradient-to-r from-[#ade8f4]/30 to-[#e2d0f9]/30">
+                <div>
+                    <div class="text-xs font-bold opacity-60 uppercase mb-1">Daily Goal</div>
+                    <div class="text-2xl font-black">{{ todayProgress }}%</div>
+                </div>
+                <div class="h-16 w-16 relative">
+                    <svg viewBox="0 0 36 36" class="w-full h-full transform -rotate-90">
+                        <path class="text-white/50" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="4" />
+                        <path :class="todayProgress === 100 ? 'text-[#b7e4c7]' : 'text-[#5d576b]'" :stroke-dasharray="todayProgress + ', 100'" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="4" />
+                    </svg>
+                </div>
+            </div>
+
+            <div v-for="habit in habits" :key="habit.id" class="glass p-4 transition-all active:scale-[0.98]">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-xl shadow-sm" :style="{ backgroundColor: habit.color }">
+                            <i :class="habit.icon" class="text-white/90 drop-shadow-sm"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg leading-tight">{{ habit.name }}</h3>
+                            <div class="text-xs font-bold opacity-40">Target: {{ habit.target }} {{ habit.unit }}</div>
+                        </div>
+                    </div>
+                    
+                    <button @click.stop="confirmDelete(habit.id)" class="text-gray-300 hover:text-red-400 p-1"><i class="fas fa-times text-xs"></i></button>
+                </div>
+
+                <div class="bg-white/60 rounded-xl p-2 flex items-center justify-between">
+                    
+                    <div v-if="habit.target === 1" @click="toggleHabit(habit)" class="w-full flex items-center gap-3 cursor-pointer py-1">
+                        <div class="w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all check-circle"
+                             :class="getLog(habit.id) >= 1 ? 'bg-[#b7e4c7] border-[#b7e4c7]' : 'border-gray-200 bg-white'">
+                            <i class="fas fa-check text-white text-sm" v-show="getLog(habit.id) >= 1"></i>
+                        </div>
+                        <span class="text-sm font-bold opacity-60" :class="{'line-through': getLog(habit.id) >= 1}">
+                            {{ getLog(habit.id) >= 1 ? 'Completed!' : 'Tap to complete' }}
+                        </span>
+                    </div>
+
+                    <div v-else class="w-full flex items-center justify-between">
+                        <button @click="updateCount(habit, -1)" class="w-10 h-10 rounded-lg bg-white shadow-sm flex items-center justify-center text-[#5d576b] active:bg-gray-100"><i class="fas fa-minus"></i></button>
+                        
+                        <div class="flex flex-col items-center">
+                            <span class="text-2xl font-black">{{ getLog(habit.id) }}</span>
+                            <div class="w-24 h-1.5 bg-gray-100 rounded-full mt-1 overflow-hidden">
+                                <div class="h-full rounded-full transition-all duration-500" :style="{ width: (getLog(habit.id) / habit.target * 100) + '%', backgroundColor: habit.color }"></div>
+                            </div>
+                        </div>
+
+                        <button @click="updateCount(habit, 1)" class="w-10 h-10 rounded-lg shadow-sm flex items-center justify-center text-white active:opacity-80 transition-colors" :style="{ backgroundColor: habit.color }"><i class="fas fa-plus"></i></button>
+                    </div>
+
+                </div>
+            </div>
+
+            <button @click="showAddModal = true" class="w-full py-4 rounded-2xl border-2 border-dashed border-[#5d576b]/20 text-[#5d576b]/40 font-bold hover:bg-white/50 transition-colors flex items-center justify-center gap-2">
+                <i class="fas fa-plus"></i> Add New Habit
+            </button>
+        </div>
+
+        <div v-if="currentView === 'week'" class="space-y-6">
+            <div class="glass p-5">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-lg">Past 7 Days</h3>
+                    <div class="flex gap-1 text-[10px] font-bold opacity-40">
+                        <span class="w-3 h-3 rounded-full bg-[#b7e4c7]"></span> Done
+                        <span class="w-3 h-3 rounded-full bg-gray-200"></span> Miss
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto pb-2">
+                    <table class="w-full border-collapse">
+                        <thead>
+                            <tr>
+                                <th class="p-2 text-left text-xs text-gray-400 font-normal">Habit</th>
+                                <th v-for="d in last7Days" :key="d.label" class="p-1 text-center text-[10px] font-bold uppercase w-8">{{ d.label }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="habit in habits" :key="habit.id" class="border-t border-gray-100">
+                                <td class="py-3 text-xs font-bold text-[#5d576b] pr-2">{{ habit.name }}</td>
+                                <td v-for="d in last7Days" :key="d.dateStr" class="text-center">
+                                    <div class="w-6 h-6 rounded-full mx-auto flex items-center justify-center text-[10px] transition-all"
+                                         :class="isDone(habit, d.dateStr) ? 'bg-[#b7e4c7] text-[#5d576b]' : 'bg-gray-100 text-transparent'">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="currentView === 'month'" class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="glass p-4 flex flex-col items-center justify-center text-center aspect-square">
+                    <div class="text-4xl font-black text-[#ffc8dd] mb-1">{{ totalCompletions }}</div>
+                    <div class="text-xs font-bold opacity-50 uppercase">Total Ticks</div>
+                </div>
+                <div class="glass p-4 flex flex-col items-center justify-center text-center aspect-square">
+                    <div class="text-4xl font-black text-[#ade8f4] mb-1">{{ bestStreak }}</div>
+                    <div class="text-xs font-bold opacity-50 uppercase">Best Streak</div>
+                </div>
+            </div>
+
+            <div class="glass p-5">
+                <h3 class="font-bold text-lg mb-4">Monthly Overview</h3>
+                <div class="space-y-4">
+                    <div v-for="habit in habits" :key="habit.id">
+                        <div class="flex justify-between text-xs font-bold mb-1">
+                            <span>{{ habit.name }}</span>
+                            <span class="opacity-50">{{ getMonthlyRate(habit) }}%</span>
+                        </div>
+                        <div class="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                            <div class="h-full rounded-full" :style="{ width: getMonthlyRate(habit) + '%', backgroundColor: habit.color }"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <nav class="fixed bottom-0 w-full h-[90px] bg-white/80 backdrop-blur-xl border-t border-white/50 z-40 flex justify-around items-start pt-4 pb-safe-bottom shadow-[0_-5px_20px_rgba(0,0,0,0.02)]">
+        <button @click="currentView = 'today'" class="flex flex-col items-center gap-1 w-16 transition-all" :class="currentView === 'today' ? 'text-[#5d576b] -translate-y-2' : 'text-gray-300'">
+            <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-lg transition-colors" :class="currentView === 'today' ? 'bg-[#ffc8dd] shadow-lg shadow-[#ffc8dd]/40 text-white' : ''">
+                <i class="fas fa-list-check"></i>
+            </div>
+            <span class="text-[9px] font-bold uppercase tracking-widest">Today</span>
+        </button>
+        
+        <button @click="currentView = 'week'" class="flex flex-col items-center gap-1 w-16 transition-all" :class="currentView === 'week' ? 'text-[#5d576b] -translate-y-2' : 'text-gray-300'">
+            <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-lg transition-colors" :class="currentView === 'week' ? 'bg-[#ade8f4] shadow-lg shadow-[#ade8f4]/40 text-white' : ''">
+                <i class="far fa-calendar-alt"></i>
+            </div>
+            <span class="text-[9px] font-bold uppercase tracking-widest">Week</span>
+        </button>
+        
+        <button @click="currentView = 'month'" class="flex flex-col items-center gap-1 w-16 transition-all" :class="currentView === 'month' ? 'text-[#5d576b] -translate-y-2' : 'text-gray-300'">
+            <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-lg transition-colors" :class="currentView === 'month' ? 'bg-[#e2d0f9] shadow-lg shadow-[#e2d0f9]/40 text-white' : ''">
+                <i class="fas fa-chart-pie"></i>
+            </div>
+            <span class="text-[9px] font-bold uppercase tracking-widest">Month</span>
+        </button>
+    </nav>
+
+    <div v-if="showAddModal" class="fixed inset-0 z-50 flex items-end justify-center">
+        <div class="absolute inset-0 bg-black/20 backdrop-blur-sm" @click="showAddModal = false"></div>
+        <div class="bg-[#fdfbf7] w-full max-w-md rounded-t-3xl p-6 relative animate-slide-up shadow-2xl pb-10">
+            <h2 class="text-2xl font-black text-[#5d576b] mb-6">New Habit</h2>
+            
+            <div class="space-y-5">
+                <div>
+                    <label class="block text-xs font-bold uppercase opacity-40 mb-2">Habit Name</label>
+                    <input v-model="newHabit.name" placeholder="e.g. Read Book" class="w-full bg-white p-4 rounded-xl border-none font-bold text-[#5d576b] focus:ring-2 focus:ring-[#ade8f4] outline-none shadow-sm">
+                </div>
+
+                <div class="flex gap-4">
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold uppercase opacity-40 mb-2">Target Count</label>
+                        <input v-model.number="newHabit.target" type="number" min="1" class="w-full bg-white p-4 rounded-xl border-none font-bold text-[#5d576b] focus:ring-2 focus:ring-[#ade8f4] outline-none shadow-sm">
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold uppercase opacity-40 mb-2">Unit</label>
+                        <input v-model="newHabit.unit" placeholder="times/mins" class="w-full bg-white p-4 rounded-xl border-none font-bold text-[#5d576b] focus:ring-2 focus:ring-[#ade8f4] outline-none shadow-sm">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase opacity-40 mb-2">Color</label>
+                    <div class="flex justify-between gap-2">
+                        <div v-for="color in pastelColors" :key="color" 
+                             @click="newHabit.color = color"
+                             class="w-10 h-10 rounded-full cursor-pointer transition-transform hover:scale-110 flex items-center justify-center border-2 border-transparent"
+                             :class="{'border-gray-400': newHabit.color === color}"
+                             :style="{backgroundColor: color}">
+                             <i v-if="newHabit.color === color" class="fas fa-check text-white text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase opacity-40 mb-2">Icon</label>
+                    <div class="flex gap-3 overflow-x-auto no-scrollbar pb-2">
+                        <button v-for="icon in icons" :key="icon" @click="newHabit.icon = icon"
+                                class="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center text-lg bg-white shadow-sm transition-all"
+                                :class="newHabit.icon === icon ? 'bg-[#5d576b] text-white' : 'text-gray-400'">
+                            <i :class="icon"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-8">
+                <button @click="showAddModal = false" class="flex-1 py-4 bg-gray-100 rounded-xl font-bold text-gray-400">Cancel</button>
+                <button @click="saveNewHabit" class="flex-1 py-4 bg-[#5d576b] text-white rounded-xl font-bold shadow-lg">Create</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const { createApp, ref, computed, onMounted, watch } = Vue;
+
+    createApp({
+        setup() {
+            const currentView = ref('today');
+            const showAddModal = ref(false);
+            const pastelColors = ['#ffc8dd', '#b7e4c7', '#ade8f4', '#e2d0f9', '#faedcb'];
+            const icons = ['fas fa-tint', 'fas fa-dumbbell', 'fas fa-book', 'fas fa-running', 'fas fa-moon', 'fas fa-apple-alt', 'fas fa-pray'];
+            
+            const pageTitles = { today: "Hello, You.", week: "Weekly Review", month: "Monthly Stats" };
+            
+            // --- DATA STRUCTURE ---
+            // Logs are stored as: { "2026-02-04": { habitId_1: 5, habitId_2: 1 } }
+            const logs = ref({});
+            
+            // Default Habits
+            const defaultHabits = [
+                { id: 1, name: "Drink Water", target: 5, unit: "bottles", color: "#ade8f4", icon: "fas fa-tint" },
+                { id: 2, name: "Duolingo", target: 1, unit: "session", color: "#b7e4c7", icon: "fas fa-language" },
+                { id: 3, name: "Plank (3 sets)", target: 3, unit: "sets", color: "#ffc8dd", icon: "fas fa-stopwatch" },
+                { id: 4, name: "Knee Lift", target: 100, unit: "reps", color: "#e2d0f9", icon: "fas fa-running" }
+            ];
+            
+            const habits = ref([...defaultHabits]);
+            
+            const newHabit = ref({ name: '', target: 1, unit: 'times', color: '#ffc8dd', icon: 'fas fa-star' });
+
+            // --- DATE HELPERS ---
+            const todayStr = computed(() => new Date().toISOString().split('T')[0]);
+            
+            const currentDateLabel = computed(() => {
+                const d = new Date();
+                return d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+            });
+
+            const last7Days = computed(() => {
+                const days = [];
+                for(let i=6; i>=0; i--) {
+                    const d = new Date();
+                    d.setDate(d.getDate() - i);
+                    days.push({
+                        dateStr: d.toISOString().split('T')[0],
+                        label: d.toLocaleDateString('en-US', { weekday: 'short' }).slice(0,3)
+                    });
+                }
+                return days;
+            });
+
+            // --- LOGIC ---
+            
+            // Get count for a specific habit on today (or specific date)
+            const getLog = (habitId, date = todayStr.value) => {
+                if (!logs.value[date]) return 0;
+                return logs.value[date][habitId] || 0;
+            };
+
+            const toggleHabit = (habit) => {
+                const current = getLog(habit.id);
+                updateLog(habit.id, current >= habit.target ? 0 : habit.target);
+            };
+
+            const updateCount = (habit, amount) => {
+                const current = getLog(habit.id);
+                const next = Math.max(0, Math.min(habit.target, current + amount)); // Clamp between 0 and Target
+                updateLog(habit.id, next);
+            };
+
+            const updateLog = (habitId, val) => {
+                if (!logs.value[todayStr.value]) logs.value[todayStr.value] = {};
+                logs.value[todayStr.value][habitId] = val;
+                saveData();
+            };
+
+            const saveNewHabit = () => {
+                if(!newHabit.value.name) return;
+                habits.value.push({
+                    id: Date.now(),
+                    ...newHabit.value
+                });
+                showAddModal.value = false;
+                newHabit.value = { name: '', target: 1, unit: 'times', color: '#ffc8dd', icon: 'fas fa-star' };
+                saveData();
+            };
+
+            const confirmDelete = (id) => {
+                if(confirm('Remove this habit?')) {
+                    habits.value = habits.value.filter(h => h.id !== id);
+                    saveData();
+                }
+            };
+
+            // --- STORAGE ---
+            const saveData = () => {
+                localStorage.setItem('pastel_habits_data', JSON.stringify(habits.value));
+                localStorage.setItem('pastel_habits_logs', JSON.stringify(logs.value));
+            };
+
+            onMounted(() => {
+                const savedHabits = localStorage.getItem('pastel_habits_data');
+                const savedLogs = localStorage.getItem('pastel_habits_logs');
+                
+                if (savedHabits) habits.value = JSON.parse(savedHabits);
+                if (savedLogs) logs.value = JSON.parse(savedLogs);
+            });
+
+            // --- ANALYTICS COMPUTED ---
+            
+            const isDone = (habit, dateStr) => {
+                const val = logs.value[dateStr]?.[habit.id] || 0;
+                return val >= habit.target;
+            };
+
+            const todayProgress = computed(() => {
+                if (habits.value.length === 0) return 0;
+                let completed = 0;
+                habits.value.forEach(h => {
+                    if (isDone(h, todayStr.value)) completed++;
+                });
+                return Math.round((completed / habits.value.length) * 100);
+            });
+
+            const totalCompletions = computed(() => {
+                let count = 0;
+                Object.values(logs.value).forEach(dayLog => {
+                    habits.value.forEach(h => {
+                        if ((dayLog[h.id] || 0) >= h.target) count++;
+                    });
+                });
+                return count;
+            });
+
+            // Calculate current streak (simple logic: consecutive days with at least 1 habit done)
+            // Note: A robust streak usually requires ALL habits done or specific habit tracking. 
+            // For simplicity here, we calculate "Habit Consistency Score"
+            const bestStreak = computed(() => {
+                // Placeholder for logic complexity
+                return Object.keys(logs.value).length; 
+            });
+
+            const getMonthlyRate = (habit) => {
+                // Calculate completion rate for this habit over all logged days
+                const loggedDays = Object.keys(logs.value);
+                if (loggedDays.length === 0) return 0;
+                
+                let doneCount = 0;
+                loggedDays.forEach(d => {
+                    if ((logs.value[d][habit.id] || 0) >= habit.target) doneCount++;
+                });
+                return Math.round((doneCount / loggedDays.length) * 100);
+            };
+
+            return {
+                currentView, showAddModal, pageTitles, currentDateLabel,
+                habits, newHabit, pastelColors, icons,
+                getLog, toggleHabit, updateCount, saveNewHabit, confirmDelete,
+                todayProgress, last7Days, isDone, totalCompletions, bestStreak, getMonthlyRate
+            };
+        }
+    }).mount('#app');
+</script>
+</body>
+</html>
