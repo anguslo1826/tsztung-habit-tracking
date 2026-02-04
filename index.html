@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>My Habit Tracker</title>
+    <title>TszTung's Habits</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -15,6 +15,7 @@
             --bg: #fdfbf7;
             --text: #5d576b;
             --pastel-green: #b7e4c7;
+            --pastel-purple: #e2d0f9;
         }
         
         body { 
@@ -29,8 +30,8 @@
         
         /* Glass Card Style */
         .glass { 
-            background: rgba(255,255,255,0.7); 
-            backdrop-filter: blur(10px); 
+            background: rgba(255,255,255,0.75); 
+            backdrop-filter: blur(12px); 
             border: 1px solid rgba(255,255,255,0.9); 
             border-radius: 24px; 
             box-shadow: 0 4px 20px rgba(0,0,0,0.03); 
@@ -57,17 +58,17 @@
 <div id="app" v-cloak class="flex flex-col h-full max-w-md mx-auto relative bg-[#fdfbf7]">
 
     <div class="pt-12 px-6 pb-4 sticky top-0 bg-[#fdfbf7]/95 z-20 backdrop-blur-sm transition-all">
-        <div class="flex justify-between items-end">
+        <div class="flex justify-between items-center">
             <div>
                 <h1 class="text-3xl font-black text-[#5d576b] tracking-tight">
-                    {{ view === 'today' ? 'My Habits' : 'Progress' }}
+                    {{ viewTitle }}
                 </h1>
                 <p class="text-xs font-bold opacity-40 uppercase tracking-widest mt-1">{{ todayLabel }}</p>
             </div>
-            <div class="w-12 h-12 rounded-full border-4 border-gray-100 flex items-center justify-center relative">
-                <span class="text-[10px] font-black">{{ todayProgress }}%</span>
+            <div class="w-16 h-16 rounded-full border-[6px] border-gray-100 flex items-center justify-center relative shadow-sm bg-white">
+                <span class="text-xs font-black">{{ todayProgress }}%</span>
                 <svg class="absolute inset-0 w-full h-full -rotate-90 transform" viewBox="0 0 36 36">
-                    <path :stroke-dasharray="todayProgress + ', 100'" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#b7e4c7" stroke-width="3" />
+                    <path :stroke-dasharray="todayProgress + ', 100'" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#b7e4c7" stroke-width="4" stroke-linecap="round"/>
                 </svg>
             </div>
         </div>
@@ -84,14 +85,18 @@
                     </div>
                     <div class="flex-1">
                         <div class="font-black text-lg text-[#5d576b] leading-none mb-1">{{ h.name }}</div>
-                        <div class="text-xs font-bold opacity-40">Goal: {{ h.target }} {{ h.unit }}</div>
+                        <div class="text-xs font-bold opacity-40">Target: {{ h.target }} {{ h.unit }}</div>
                     </div>
                     <button @click="deleteHabit(h.id)" class="opacity-20 hover:opacity-100 p-2"><i class="fas fa-times text-xs"></i></button>
                 </div>
 
                 <div class="flex items-center justify-between gap-3 relative z-10">
                     
-                    <div class="flex-1 h-14 bg-white/80 rounded-2xl flex items-center justify-between px-1 shadow-sm border border-white">
+                    <div class="flex-1 h-14 bg-white/80 rounded-2xl flex items-center justify-between px-1 shadow-sm border border-white relative">
+                        <button @click="resetHabit(h)" class="absolute -top-3 -right-2 w-6 h-6 bg-gray-200 rounded-full text-[10px] flex items-center justify-center text-gray-500 shadow-sm border-2 border-white z-20 active:scale-90" title="Reset to 0">
+                            <i class="fas fa-undo"></i>
+                        </button>
+
                         <button @click="update(h, -1)" class="w-10 h-10 rounded-xl flex items-center justify-center text-gray-400 active:bg-gray-100 transition-colors"><i class="fas fa-minus"></i></button>
                         
                         <input type="number" 
@@ -111,7 +116,8 @@
                 </div>
 
                 <div class="absolute bottom-0 left-0 h-1.5 bg-gray-100/50 w-full">
-                    <div class="h-full transition-all duration-500 ease-out" :style="{width: getPercent(h)+'%', background: h.color}"></div>
+                    <div class="h-full transition-all duration-500 ease-out" 
+                         :style="{width: Math.min(100, getPercent(h)) + '%', background: h.color}"></div>
                 </div>
             </div>
 
@@ -123,7 +129,7 @@
         <div v-if="view === 'month'" class="space-y-6 pt-2">
             <div class="glass p-6">
                 <div class="flex justify-between items-center mb-6">
-                    <span class="font-black text-xl text-[#5d576b]">February 2026</span>
+                    <span class="font-black text-xl text-[#5d576b]">Calendar View</span>
                 </div>
                 
                 <div class="grid grid-cols-7 gap-3 mb-2">
@@ -139,51 +145,87 @@
                 
                 <div class="flex justify-center gap-4 text-[10px] font-bold opacity-50 mt-6">
                     <span class="flex items-center"><div class="w-3 h-3 bg-gray-100 rounded mr-1"></div> Empty</span>
-                    <span class="flex items-center"><div class="w-3 h-3 bg-[#e2d0f9] rounded mr-1"></div> Partial</span>
+                    <span class="flex items-center"><div class="w-3 h-3 bg-[#e2d0f9] rounded mr-1"></div> Done</span>
                     <span class="flex items-center"><div class="w-3 h-3 bg-[#b7e4c7] rounded mr-1"></div> Perfect</span>
-                </div>
-            </div>
-
-            <div class="glass p-6">
-                <h3 class="font-bold text-[#5d576b] mb-4">Habit Stats (This Month)</h3>
-                <div class="space-y-4">
-                    <div v-for="h in habits" :key="h.id" class="flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="w-2 h-2 rounded-full" :style="{background: h.color}"></div>
-                            <span class="text-sm font-bold opacity-80">{{ h.name }}</span>
-                        </div>
-                        <span class="text-xs font-black opacity-40">{{ getMonthlyCount(h) }} days</span>
-                    </div>
                 </div>
             </div>
         </div>
 
+        <div v-if="view === 'review'" class="space-y-6 pt-2">
+            
+            <div class="glass p-6">
+                <h3 class="font-black text-lg text-[#5d576b] mb-4 flex items-center">
+                    <i class="fas fa-chart-bar mr-2 text-[#e2d0f9]"></i> Weekly Review
+                </h3>
+                <div class="space-y-4">
+                    <div v-for="day in last7Days" :key="day.date" class="flex items-center justify-between">
+                        <div class="flex items-center gap-3 w-20">
+                            <span class="text-xs font-bold opacity-50">{{ day.label }}</span>
+                        </div>
+                        <div class="flex-1 h-3 bg-gray-100 rounded-full mx-3 overflow-hidden">
+                            <div class="h-full bg-[#e2d0f9]" :style="{width: day.percent + '%'}"></div>
+                        </div>
+                        <span class="text-xs font-black w-8 text-right">{{ day.score }}/{{ habits.length }}</span>
+                    </div>
+                </div>
+                <div class="mt-4 pt-4 border-t border-gray-100 text-center text-xs font-bold opacity-40">
+                    Last 7 Days Performance
+                </div>
+            </div>
+
+            <div class="glass p-6">
+                <h3 class="font-black text-lg text-[#5d576b] mb-4 flex items-center">
+                    <i class="fas fa-trophy mr-2 text-[#b7e4c7]"></i> Monthly Totals
+                </h3>
+                <p class="text-xs opacity-50 font-bold mb-4">Actual counts (Includes extra effort!)</p>
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <div v-for="h in habits" :key="h.id" class="bg-white/60 p-3 rounded-2xl border border-white shadow-sm">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] text-white" :style="{background: h.color}">
+                                <i :class="h.icon"></i>
+                            </div>
+                            <span class="text-xs font-bold truncate">{{ h.name }}</span>
+                        </div>
+                        <div class="text-2xl font-black text-[#5d576b]">
+                            {{ getMonthlyTotal(h) }}
+                            <span class="text-[10px] font-bold opacity-40 ml-1">{{ h.unit }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
     </main>
 
-    <nav class="fixed bottom-0 w-full bg-white/90 backdrop-blur-xl border-t border-gray-100 pb-8 pt-3 flex justify-around h-[85px] z-30">
-        <button @click="view='today'" class="flex flex-col items-center w-20 transition-all active:scale-95" :class="view==='today'?'text-[#5d576b]':'text-gray-300'">
+    <nav class="fixed bottom-0 w-full bg-white/90 backdrop-blur-xl border-t border-gray-100 pb-8 pt-3 flex justify-around h-[90px] z-30">
+        <button @click="view='today'" class="flex flex-col items-center w-16 transition-all active:scale-95" :class="view==='today'?'text-[#5d576b] scale-105':'text-gray-300'">
             <div class="text-2xl mb-1" :class="view==='today'?'drop-shadow-sm':''"><i class="fas fa-check-square"></i></div>
             <span class="text-[9px] font-bold tracking-widest">TODAY</span>
         </button>
-        <button @click="view='month'" class="flex flex-col items-center w-20 transition-all active:scale-95" :class="view==='month'?'text-[#5d576b]':'text-gray-300'">
+        
+        <button @click="view='month'" class="flex flex-col items-center w-16 transition-all active:scale-95" :class="view==='month'?'text-[#5d576b] scale-105':'text-gray-300'">
             <div class="text-2xl mb-1" :class="view==='month'?'drop-shadow-sm':''"><i class="fas fa-calendar-alt"></i></div>
             <span class="text-[9px] font-bold tracking-widest">MONTH</span>
+        </button>
+
+        <button @click="view='review'" class="flex flex-col items-center w-16 transition-all active:scale-95" :class="view==='review'?'text-[#5d576b] scale-105':'text-gray-300'">
+            <div class="text-2xl mb-1" :class="view==='review'?'drop-shadow-sm':''"><i class="fas fa-chart-pie"></i></div>
+            <span class="text-[9px] font-bold tracking-widest">REVIEW</span>
         </button>
     </nav>
 
     <div v-if="showModal" class="fixed inset-0 z-50 flex items-end justify-center">
         <div class="absolute inset-0 bg-black/20 backdrop-blur-sm transition-opacity" @click="showModal=false"></div>
-        
         <div class="bg-white w-full max-w-md rounded-t-[32px] p-8 slide-up relative shadow-2xl pb-12">
             <div class="w-12 h-1 bg-gray-200 rounded-full mx-auto mb-6"></div>
             <h2 class="text-2xl font-black mb-6 text-[#5d576b]">Create Habit</h2>
-            
             <div class="space-y-5">
                 <div>
                     <label class="text-xs font-bold uppercase opacity-40 ml-1">Habit Name</label>
                     <input v-model="newH.name" placeholder="e.g. Read Book" class="w-full bg-gray-50 p-4 rounded-2xl font-bold outline-none text-lg text-[#5d576b] focus:ring-2 focus:ring-[#b7e4c7] transition-all">
                 </div>
-
                 <div class="flex gap-4">
                     <div class="w-1/3">
                         <label class="text-xs font-bold uppercase opacity-40 ml-1">Target</label>
@@ -194,21 +236,14 @@
                         <input v-model="newH.unit" placeholder="mins/times" class="w-full bg-gray-50 p-4 rounded-2xl font-bold outline-none text-lg focus:ring-2 focus:ring-[#b7e4c7]">
                     </div>
                 </div>
-
                 <div>
                     <label class="text-xs font-bold uppercase opacity-40 ml-1 mb-2 block">Color</label>
                     <div class="flex gap-3 overflow-x-auto no-scrollbar py-1">
-                        <div v-for="c in colors" :key="c" @click="newH.color=c" 
-                             class="w-12 h-12 rounded-full cursor-pointer border-4 transition-transform hover:scale-110 shadow-sm flex-shrink-0" 
-                             :style="{background:c, borderColor: newH.color===c?'#5d576b':'transparent'}">
-                        </div>
+                        <div v-for="c in colors" :key="c" @click="newH.color=c" class="w-12 h-12 rounded-full cursor-pointer border-4 transition-transform hover:scale-110 shadow-sm flex-shrink-0" :style="{background:c, borderColor: newH.color===c?'#5d576b':'transparent'}"></div>
                     </div>
                 </div>
             </div>
-
-            <button @click="addHabit" class="w-full bg-[#5d576b] text-white py-4 rounded-2xl font-bold text-lg mt-8 shadow-lg active:scale-95 transition-transform">
-                Save Habit
-            </button>
+            <button @click="addHabit" class="w-full bg-[#5d576b] text-white py-4 rounded-2xl font-bold text-lg mt-8 shadow-lg active:scale-95 transition-transform">Save Habit</button>
         </div>
     </div>
 
@@ -239,14 +274,25 @@ createApp({
         const update = (h, val) => {
             if(!logs.value[dateKey]) logs.value[dateKey] = {};
             const cur = logs.value[dateKey][h.id] || 0;
+            // Allow going above target!
             logs.value[dateKey][h.id] = Math.max(0, cur + val);
+        };
+
+        const resetHabit = (h) => {
+            if(logs.value[dateKey]) {
+                logs.value[dateKey][h.id] = 0;
+            }
         };
 
         const complete = (h) => {
             if(!logs.value[dateKey]) logs.value[dateKey] = {};
             const cur = logs.value[dateKey][h.id] || 0;
-            // Toggle logic: If completed, reset to 0. If incomplete, set to Target.
-            logs.value[dateKey][h.id] = cur >= h.target ? 0 : h.target;
+            // If already met target (or more), reset to 0. Otherwise set to Target.
+            if (cur >= h.target) {
+                logs.value[dateKey][h.id] = 0;
+            } else {
+                logs.value[dateKey][h.id] = h.target;
+            }
         };
 
         const addHabit = () => {
@@ -268,10 +314,17 @@ createApp({
         
         const getPercent = (h) => {
             const val = logs.value[dateKey]?.[h.id] || 0;
-            return Math.min(100, (val / h.target) * 100);
+            // Can be > 100%, but visual bar is capped at 100% in inline style
+            return (val / h.target) * 100;
         };
         
         const todayLabel = new Date().toLocaleDateString('en-US', { weekday:'long', month:'short', day:'numeric' });
+        
+        const viewTitle = computed(() => {
+            if(view.value === 'today') return "TszTung's Habit";
+            if(view.value === 'month') return "Calendar";
+            return "Review";
+        });
 
         const todayProgress = computed(() => {
             if(!habits.value.length) return 0;
@@ -280,64 +333,85 @@ createApp({
             return Math.round((doneCount / habits.value.length) * 100);
         });
 
-        // --- CALENDAR LOGIC ---
+        // --- CALENDAR LOGIC (Feb 2026) ---
         const getDayClass = (day) => {
-            // Very simple fixed calendar for Feb 2026
             const dStr = `2026-02-${String(day).padStart(2,'0')}`;
             const todayNum = new Date().getDate();
             
-            // Future dates
             if(day > todayNum) return { cls: 'bg-gray-50 text-gray-200 border-transparent', style: {} };
             
-            // Calculate Score
             const dayLog = logs.value[dStr] || {};
             let done = 0;
             habits.value.forEach(h => {
                 if((dayLog[h.id] || 0) >= h.target) done++;
             });
             
-            if(done === 0) return { cls: 'bg-white border-gray-100 text-gray-300', style: {} }; // Empty
+            if(done === 0) return { cls: 'bg-white border-gray-100 text-gray-300', style: {} };
             
             if(done === habits.value.length) {
-                // Perfect day
                 return { cls: 'text-white border-[#b7e4c7] font-black', style: { background: '#b7e4c7' } };
             } else {
-                // Partial day
                 return { cls: 'text-white border-[#e2d0f9]', style: { background: '#e2d0f9' } };
             }
         };
 
-        const getMonthlyCount = (h) => {
-            let count = 0;
+        // --- REVIEW LOGIC ---
+        
+        // 1. Last 7 Days Summary
+        const last7Days = computed(() => {
+            const days = [];
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const iso = d.toISOString().split('T')[0];
+                const dayLog = logs.value[iso] || {};
+                
+                let score = 0;
+                habits.value.forEach(h => {
+                    if ((dayLog[h.id] || 0) >= h.target) score++;
+                });
+
+                days.push({
+                    date: iso,
+                    label: d.toLocaleDateString('en-US', { weekday: 'short' }),
+                    score: score,
+                    percent: (score / habits.value.length) * 100
+                });
+            }
+            return days;
+        });
+
+        // 2. Monthly Total Counts (Actual Sum)
+        const getMonthlyTotal = (h) => {
+            let total = 0;
             Object.keys(logs.value).forEach(k => {
-                // Only count current month keys roughly for this demo
+                // Check if key is in Feb 2026
                 if(k.startsWith('2026-02')) {
-                    if((logs.value[k][h.id]||0) >= h.target) count++;
+                    total += (logs.value[k][h.id] || 0);
                 }
             });
-            return count;
+            return total;
         };
 
         // --- STORAGE ---
         onMounted(() => {
-            const h = localStorage.getItem('habits_v4');
-            const l = localStorage.getItem('logs_v4');
+            const h = localStorage.getItem('habits_v5');
+            const l = localStorage.getItem('logs_v5');
             if(h) habits.value = JSON.parse(h);
             if(l) logs.value = JSON.parse(l);
-            // Ensure today exists
             if(!logs.value[dateKey]) logs.value[dateKey] = {};
         });
 
         watch([habits, logs], () => {
-            localStorage.setItem('habits_v4', JSON.stringify(habits.value));
-            localStorage.setItem('logs_v4', JSON.stringify(logs.value));
+            localStorage.setItem('habits_v5', JSON.stringify(habits.value));
+            localStorage.setItem('logs_v5', JSON.stringify(logs.value));
         }, { deep: true });
 
         return { 
             view, habits, logs, dateKey, showModal, newH, colors, 
-            update, complete, addHabit, deleteHabit,
-            isDone, getPercent, todayLabel, todayProgress,
-            getDayClass, getMonthlyCount
+            update, complete, resetHabit, addHabit, deleteHabit,
+            isDone, getPercent, todayLabel, todayProgress, viewTitle,
+            getDayClass, last7Days, getMonthlyTotal
         };
     }
 }).mount('#app');
