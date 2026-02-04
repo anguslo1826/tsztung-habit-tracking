@@ -30,7 +30,6 @@
             -webkit-tap-highlight-color: transparent;
         }
         
-        /* Glass Card Style */
         .glass { 
             background: rgba(255,255,255,0.85); 
             backdrop-filter: blur(12px); 
@@ -46,24 +45,22 @@
         input[type=number]::-webkit-inner-spin-button, 
         input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         
-        /* Animations */
         .slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         
         .scale-in { animation: scaleIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
         @keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-        /* 1. RABBIT STICKERS CSS */
         .sticker-bg {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; /* Allows clicking through */
+            pointer-events: none;
             z-index: 0;
             overflow: hidden;
         }
         .bunny-sticker {
             position: absolute;
-            opacity: 0.15; /* Subtle background look */
+            opacity: 0.15;
             transition: transform 0.5s;
         }
         
@@ -275,6 +272,14 @@
                         <div v-for="c in colors" :key="c" @click="newH.color=c" class="w-12 h-12 rounded-full cursor-pointer border-4 transition-transform hover:scale-110 shadow-sm flex-shrink-0" :style="{background:c, borderColor: newH.color===c?'#5d576b':'transparent'}"></div>
                     </div>
                 </div>
+                <div>
+                    <label class="text-xs font-bold uppercase opacity-40 ml-1 mb-2 block">Icon</label>
+                    <div class="flex gap-3 overflow-x-auto no-scrollbar py-1">
+                        <div v-for="icon in allIcons" :key="icon" @click="newH.icon=icon" class="w-12 h-12 rounded-2xl cursor-pointer border-2 transition-transform hover:scale-110 shadow-sm flex-shrink-0 flex items-center justify-center" :style="{borderColor: newH.icon===icon?'#5d576b':'transparent'}">
+                            <i :class="icon" class="text-xl text-[#5d576b]"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
             <button @click="addHabit" class="w-full bg-[#5d576b] text-white py-4 rounded-2xl font-bold text-lg mt-8 shadow-lg active:scale-95 transition-transform">Save Habit</button>
         </div>
@@ -301,6 +306,16 @@ createApp({
         
         const newH = ref({ name:'', target:1, unit:'', color:'#ade8f4', icon:'fas fa-star' });
         const colors = ['#ade8f4', '#b7e4c7', '#ffc8dd', '#e2d0f9', '#fdf0d5', '#ff9aa2', '#a0c4ff'];
+        const allIcons = [
+            // Music
+            'fas fa-music', 'fas fa-headphones', 'fas fa-guitar', 'fas fa-microphone', 'fas fa-drum',
+            // Nature & Farming
+            'fas fa-tree', 'fas fa-leaf', 'fas fa-seedling', 'fas fa-sun', 'fas fa-cloud-rain',
+            // Sports
+            'fas fa-basketball-ball', 'fas fa-futbol', 'fas fa-running', 'fas fa-swimmer', 'fas fa-dumbbell',
+            // Original
+            'fas fa-tint', 'fas fa-language', 'fas fa-stopwatch', 'fas fa-star'
+        ];
 
         const update = (h, val) => {
             if(!logs.value[dateKey]) logs.value[dateKey] = {};
@@ -312,7 +327,7 @@ createApp({
             if(!logs.value[dateKey]) logs.value[dateKey] = {};
             const cur = logs.value[dateKey][h.id] || 0;
             if (cur >= h.target) {
-                logs.value[dateKey][h.id] = 0; // Reset
+                logs.value[dateKey][h.id] = 0;
             } else {
                 logs.value[dateKey][h.id] = h.target;
             }
@@ -353,7 +368,6 @@ createApp({
             return Math.round((doneCount / habits.value.length) * 100);
         });
 
-        // CALENDAR
         const getDayClass = (day) => {
             const dStr = `2026-02-${String(day).padStart(2,'0')}`;
             const todayNum = new Date().getDate();
@@ -370,11 +384,10 @@ createApp({
             return { cls: 'text-white border-[#e2d0f9]', style: { background: '#e2d0f9' } };
         };
 
-        // 4. WEEKLY REVIEW LOGIC (MONDAY START)
         const thisWeek = computed(() => {
             const today = new Date();
-            const day = today.getDay(); // 0(Sun) - 6(Sat)
-            const diff = today.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is sunday
+            const day = today.getDay();
+            const diff = today.getDate() - day + (day === 0 ? -6 : 1);
             const monday = new Date(today.setDate(diff));
 
             const days = [];
@@ -426,7 +439,7 @@ createApp({
         }, { deep: true });
 
         return { 
-            view, habits, logs, dateKey, showModal, newH, colors, 
+            view, habits, logs, dateKey, showModal, newH, colors, allIcons,
             update, complete, addHabit, deleteHabit,
             isDone, getPercent, todayLabel, todayProgress, viewTitle,
             getDayClass, thisWeek, getMonthlyTotal
