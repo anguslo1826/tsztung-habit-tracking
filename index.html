@@ -121,15 +121,12 @@
                 </div>
             </div>
 
-            <button @click="showModal=true" class="w-full py-5 border-2 border-dashed border-gray-300/40 rounded-3xl text-gray-400 font-bold hover:bg-white/50 transition-colors flex items-center justify-center gap-2 mt-6">
-                <i class="fas fa-plus-circle"></i> Add New Habit
-            </button>
-        </div>
+            <div class="h-12"></div> </div>
 
         <div v-if="view === 'month'" class="space-y-6 pt-2">
             <div class="glass p-6">
                 <div class="flex justify-between items-center mb-6">
-                    <span class="font-black text-xl text-[#5d576b]">Calendar View</span>
+                    <span class="font-black text-xl text-[#5d576b]">Calendar</span>
                 </div>
                 
                 <div class="grid grid-cols-7 gap-3 mb-2">
@@ -159,17 +156,17 @@
                 </h3>
                 <div class="space-y-4">
                     <div v-for="day in last7Days" :key="day.date" class="flex items-center justify-between">
-                        <div class="flex items-center gap-3 w-20">
-                            <span class="text-xs font-bold opacity-50">{{ day.label }}</span>
+                        <div class="flex flex-col w-24">
+                            <span class="text-xs font-bold opacity-60 uppercase">{{ day.label }}</span>
+                            <span v-if="day.surpassed" class="text-[9px] font-black text-[#b7e4c7] animate-pulse">🔥 SURPASS</span>
                         </div>
-                        <div class="flex-1 h-3 bg-gray-100 rounded-full mx-3 overflow-hidden">
-                            <div class="h-full bg-[#e2d0f9]" :style="{width: day.percent + '%'}"></div>
+                        
+                        <div class="flex-1 h-3 bg-gray-100 rounded-full mx-3 overflow-hidden relative">
+                            <div class="h-full bg-[#e2d0f9]" :style="{width: Math.min(100, day.percent) + '%'}"></div>
+                            <div v-if="day.surpassed" class="absolute top-0 left-0 h-full bg-[#faedcb] mix-blend-multiply" style="width: 100%"></div>
                         </div>
                         <span class="text-xs font-black w-8 text-right">{{ day.score }}/{{ habits.length }}</span>
                     </div>
-                </div>
-                <div class="mt-4 pt-4 border-t border-gray-100 text-center text-xs font-bold opacity-40">
-                    Last 7 Days Performance
                 </div>
             </div>
 
@@ -216,6 +213,12 @@
         </button>
     </nav>
 
+    <button v-if="view === 'today'" 
+            @click="showModal=true" 
+            class="fixed bottom-28 right-6 w-16 h-16 bg-[#5d576b] text-white rounded-full shadow-xl flex items-center justify-center z-40 text-2xl active:scale-90 transition-transform border-4 border-white/50 backdrop-blur-sm">
+        <i class="fas fa-plus"></i>
+    </button>
+
     <div v-if="showModal" class="fixed inset-0 z-50 flex items-end justify-center">
         <div class="absolute inset-0 bg-black/20 backdrop-blur-sm transition-opacity" @click="showModal=false"></div>
         <div class="bg-white w-full max-w-md rounded-t-[32px] p-8 slide-up relative shadow-2xl pb-12">
@@ -258,7 +261,6 @@ createApp({
         const showModal = ref(false);
         const dateKey = new Date().toISOString().split('T')[0];
         
-        // --- DATA STATE ---
         const logs = ref({ [dateKey]: {} });
         const habits = ref([
             { id: 1, name: "Drink Water", target: 5, unit: "bottles", color: "#ade8f4", icon: "fas fa-tint" },
@@ -270,11 +272,9 @@ createApp({
         const newH = ref({ name:'', target:1, unit:'', color:'#ade8f4', icon:'fas fa-star' });
         const colors = ['#ade8f4', '#b7e4c7', '#ffc8dd', '#e2d0f9', '#fdf0d5', '#ff9aa2', '#a0c4ff'];
 
-        // --- CORE ACTIONS ---
         const update = (h, val) => {
             if(!logs.value[dateKey]) logs.value[dateKey] = {};
             const cur = logs.value[dateKey][h.id] || 0;
-            // Allow going above target!
             logs.value[dateKey][h.id] = Math.max(0, cur + val);
         };
 
@@ -287,7 +287,6 @@ createApp({
         const complete = (h) => {
             if(!logs.value[dateKey]) logs.value[dateKey] = {};
             const cur = logs.value[dateKey][h.id] || 0;
-            // If already met target (or more), reset to 0. Otherwise set to Target.
             if (cur >= h.target) {
                 logs.value[dateKey][h.id] = 0;
             } else {
@@ -309,16 +308,17 @@ createApp({
             }
         };
 
-        // --- DISPLAY HELPERS ---
         const isDone = (h) => (logs.value[dateKey]?.[h.id] || 0) >= h.target;
         
         const getPercent = (h) => {
             const val = logs.value[dateKey]?.[h.id] || 0;
-            // Can be > 100%, but visual bar is capped at 100% in inline style
             return (val / h.target) * 100;
         };
         
-        const todayLabel = new Date().toLocaleDateString('en-US', { weekday:'long', month:'short', day:'numeric' });
+        // 2. DYNAMIC DATE LOGIC
+        const todayLabel = computed(() => {
+            return new Date().toLocaleDateString('en-US', { weekday:'long', month:'short', day:'numeric' });
+        });
         
         const viewTitle = computed(() => {
             if(view.value === 'today') return "TszTung's Habit";
@@ -333,11 +333,10 @@ createApp({
             return Math.round((doneCount / habits.value.length) * 100);
         });
 
-        // --- CALENDAR LOGIC (Feb 2026) ---
+        // 3. CALENDAR
         const getDayClass = (day) => {
             const dStr = `2026-02-${String(day).padStart(2,'0')}`;
             const todayNum = new Date().getDate();
-            
             if(day > todayNum) return { cls: 'bg-gray-50 text-gray-200 border-transparent', style: {} };
             
             const dayLog = logs.value[dStr] || {};
@@ -347,17 +346,11 @@ createApp({
             });
             
             if(done === 0) return { cls: 'bg-white border-gray-100 text-gray-300', style: {} };
-            
-            if(done === habits.value.length) {
-                return { cls: 'text-white border-[#b7e4c7] font-black', style: { background: '#b7e4c7' } };
-            } else {
-                return { cls: 'text-white border-[#e2d0f9]', style: { background: '#e2d0f9' } };
-            }
+            if(done === habits.value.length) return { cls: 'text-white border-[#b7e4c7] font-black', style: { background: '#b7e4c7' } };
+            return { cls: 'text-white border-[#e2d0f9]', style: { background: '#e2d0f9' } };
         };
 
-        // --- REVIEW LOGIC ---
-        
-        // 1. Last 7 Days Summary
+        // 4. REVIEW & SURPASS LOGIC
         const last7Days = computed(() => {
             const days = [];
             for (let i = 6; i >= 0; i--) {
@@ -367,25 +360,28 @@ createApp({
                 const dayLog = logs.value[iso] || {};
                 
                 let score = 0;
+                let surpassed = false; // Check if ANY habit exceeded target
+
                 habits.value.forEach(h => {
-                    if ((dayLog[h.id] || 0) >= h.target) score++;
+                    const val = dayLog[h.id] || 0;
+                    if (val >= h.target) score++;
+                    if (val > h.target) surpassed = true; // "More than target" logic
                 });
 
                 days.push({
                     date: iso,
                     label: d.toLocaleDateString('en-US', { weekday: 'short' }),
                     score: score,
-                    percent: (score / habits.value.length) * 100
+                    percent: (score / habits.value.length) * 100,
+                    surpassed: surpassed
                 });
             }
             return days;
         });
 
-        // 2. Monthly Total Counts (Actual Sum)
         const getMonthlyTotal = (h) => {
             let total = 0;
             Object.keys(logs.value).forEach(k => {
-                // Check if key is in Feb 2026
                 if(k.startsWith('2026-02')) {
                     total += (logs.value[k][h.id] || 0);
                 }
@@ -393,18 +389,17 @@ createApp({
             return total;
         };
 
-        // --- STORAGE ---
         onMounted(() => {
-            const h = localStorage.getItem('habits_v5');
-            const l = localStorage.getItem('logs_v5');
+            const h = localStorage.getItem('habits_v6');
+            const l = localStorage.getItem('logs_v6');
             if(h) habits.value = JSON.parse(h);
             if(l) logs.value = JSON.parse(l);
             if(!logs.value[dateKey]) logs.value[dateKey] = {};
         });
 
         watch([habits, logs], () => {
-            localStorage.setItem('habits_v5', JSON.stringify(habits.value));
-            localStorage.setItem('logs_v5', JSON.stringify(logs.value));
+            localStorage.setItem('habits_v6', JSON.stringify(habits.value));
+            localStorage.setItem('logs_v6', JSON.stringify(logs.value));
         }, { deep: true });
 
         return { 
