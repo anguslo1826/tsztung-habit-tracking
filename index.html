@@ -72,22 +72,10 @@
 <div id="app" v-cloak class="flex flex-col h-full max-w-md mx-auto relative bg-[#fdfbf7]">
 
     <div class="sticker-bg">
-        <svg class="bunny-sticker" style="top: 5%; left: 5%; width: 60px; transform: rotate(-15deg);" viewBox="0 0 100 100">
-            <path d="M30 40 Q25 10 40 30 Q50 40 60 30 Q75 10 70 40 Q90 50 90 70 Q90 90 50 90 Q10 90 10 70 Q10 50 30 40" fill="#e2d0f9"/>
-            <circle cx="35" cy="55" r="3" fill="#5d576b"/><circle cx="65" cy="55" r="3" fill="#5d576b"/>
-        </svg>
-        <svg class="bunny-sticker" style="top: 15%; right: -10px; width: 80px; transform: rotate(20deg);" viewBox="0 0 100 100">
-            <path d="M30 40 Q25 10 40 30 Q50 40 60 30 Q75 10 70 40 Q90 50 90 70 Q90 90 50 90 Q10 90 10 70 Q10 50 30 40" fill="#fbc4ab"/>
-            <circle cx="35" cy="55" r="3" fill="#5d576b"/><circle cx="65" cy="55" r="3" fill="#5d576b"/>
-        </svg>
-        <svg class="bunny-sticker" style="bottom: 25%; left: -20px; width: 100px; transform: rotate(-10deg);" viewBox="0 0 100 100">
-            <path d="M30 40 Q25 10 40 30 Q50 40 60 30 Q75 10 70 40 Q90 50 90 70 Q90 90 50 90 Q10 90 10 70 Q10 50 30 40" fill="#b7e4c7"/>
-            <circle cx="35" cy="55" r="3" fill="#5d576b"/><circle cx="65" cy="55" r="3" fill="#5d576b"/>
-        </svg>
-        <svg class="bunny-sticker" style="bottom: 12%; right: 10%; width: 50px; transform: rotate(45deg);" viewBox="0 0 100 100">
-            <path d="M30 40 Q25 10 40 30 Q50 40 60 30 Q75 10 70 40 Q90 50 90 70 Q90 90 50 90 Q10 90 10 70 Q10 50 30 40" fill="#99c1de"/>
-            <circle cx="35" cy="55" r="3" fill="#5d576b"/><circle cx="65" cy="55" r="3" fill="#5d576b"/>
-        </svg>
+        <svg class="bunny-sticker" style="top: 5%; left: 5%; width: 60px; transform: rotate(-15deg);" viewBox="0 0 100 100"><path d="M30 40 Q25 10 40 30 Q50 40 60 30 Q75 10 70 40 Q90 50 90 70 Q90 90 50 90 Q10 90 10 70 Q10 50 30 40" fill="#e2d0f9"/><circle cx="35" cy="55" r="3" fill="#5d576b"/><circle cx="65" cy="55" r="3" fill="#5d576b"/></svg>
+        <svg class="bunny-sticker" style="top: 15%; right: -10px; width: 80px; transform: rotate(20deg);" viewBox="0 0 100 100"><path d="M30 40 Q25 10 40 30 Q50 40 60 30 Q75 10 70 40 Q90 50 90 70 Q90 90 50 90 Q10 90 10 70 Q10 50 30 40" fill="#fbc4ab"/><circle cx="35" cy="55" r="3" fill="#5d576b"/><circle cx="65" cy="55" r="3" fill="#5d576b"/></svg>
+        <svg class="bunny-sticker" style="bottom: 25%; left: -20px; width: 100px; transform: rotate(-10deg);" viewBox="0 0 100 100"><path d="M30 40 Q25 10 40 30 Q50 40 60 30 Q75 10 70 40 Q90 50 90 70 Q90 90 50 90 Q10 90 10 70 Q10 50 30 40" fill="#b7e4c7"/><circle cx="35" cy="55" r="3" fill="#5d576b"/><circle cx="65" cy="55" r="3" fill="#5d576b"/></svg>
+        <svg class="bunny-sticker" style="bottom: 12%; right: 10%; width: 50px; transform: rotate(45deg);" viewBox="0 0 100 100"><path d="M30 40 Q25 10 40 30 Q50 40 60 30 Q75 10 70 40 Q90 50 90 70 Q90 90 50 90 Q10 90 10 70 Q10 50 30 40" fill="#99c1de"/><circle cx="35" cy="55" r="3" fill="#5d576b"/><circle cx="65" cy="55" r="3" fill="#5d576b"/></svg>
     </div>
 
     <div class="pt-12 px-6 pb-4 sticky top-0 bg-[#fdfbf7]/95 z-30 backdrop-blur-sm transition-all">
@@ -98,11 +86,18 @@
                 </h1>
                 <p class="text-xs font-bold opacity-40 uppercase tracking-widest mt-1">{{ todayLabel }}</p>
             </div>
-            <div class="w-16 h-16 rounded-full border-[6px] border-gray-100 flex items-center justify-center relative shadow-sm bg-white">
-                <span class="text-xs font-black">{{ todayProgress }}%</span>
-                <svg class="absolute inset-0 w-full h-full -rotate-90 transform" viewBox="0 0 36 36">
-                    <path :stroke-dasharray="todayProgress + ', 100'" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#b7e4c7" stroke-width="4" stroke-linecap="round"/>
-                </svg>
+            
+            <div class="flex items-center gap-3">
+                <button @click="showSettings=true" class="w-10 h-10 rounded-full bg-white border border-gray-100 shadow-sm flex items-center justify-center text-[#5d576b] active:scale-90 transition-transform">
+                    <i class="fas fa-cog"></i>
+                </button>
+
+                <div class="w-16 h-16 rounded-full border-[6px] border-gray-100 flex items-center justify-center relative shadow-sm bg-white">
+                    <span class="text-xs font-black">{{ todayProgress }}%</span>
+                    <svg class="absolute inset-0 w-full h-full -rotate-90 transform" viewBox="0 0 36 36">
+                        <path :stroke-dasharray="todayProgress + ', 100'" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#b7e4c7" stroke-width="4" stroke-linecap="round"/>
+                    </svg>
+                </div>
             </div>
         </div>
     </div>
@@ -110,7 +105,6 @@
     <main class="flex-1 overflow-y-auto px-5 pb-32 space-y-5 no-scrollbar relative z-10">
         
         <div v-if="view === 'today'" class="space-y-4 pt-2">
-            
             <div v-for="h in habits" :key="h.id" class="glass p-5 relative overflow-hidden transition-all active:scale-[0.99]">
                 <div class="flex items-center gap-4 mb-5">
                     <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-sm text-white transition-colors" :style="{background: h.color}">
@@ -125,30 +119,20 @@
 
                 <div class="flex items-center justify-between gap-3 relative z-10">
                     <div class="flex-1 h-14 bg-white/80 rounded-2xl flex items-center justify-between px-1 shadow-sm border border-white relative">
-                        <button @click="update(h, -1)" class="w-10 h-10 rounded-xl flex items-center justify-center text-gray-400 active:bg-gray-100 transition-colors"><i class="fas fa-minus"></i></button>
-                        
-                        <input type="number" 
-                               v-model.number="logs[dateKey][h.id]" 
-                               placeholder="0"
-                               @focus="$event.target.select()"
-                               class="w-full h-full bg-transparent text-center font-black text-2xl text-[#5d576b] outline-none placeholder-gray-200">
-                        
-                        <button @click="update(h, 1)" class="w-10 h-10 rounded-xl flex items-center justify-center text-[#5d576b] active:bg-gray-100 transition-colors"><i class="fas fa-plus"></i></button>
+                        <button @click="update(h, -1, dateKey)" class="w-10 h-10 rounded-xl flex items-center justify-center text-gray-400 active:bg-gray-100 transition-colors"><i class="fas fa-minus"></i></button>
+                        <input type="number" v-model.number="logs[dateKey][h.id]" placeholder="0" @focus="$event.target.select()" class="w-full h-full bg-transparent text-center font-black text-2xl text-[#5d576b] outline-none placeholder-gray-200">
+                        <button @click="update(h, 1, dateKey)" class="w-10 h-10 rounded-xl flex items-center justify-center text-[#5d576b] active:bg-gray-100 transition-colors"><i class="fas fa-plus"></i></button>
                     </div>
 
-                    <button @click="complete(h)" 
-                            class="w-14 h-14 rounded-2xl flex items-center justify-center shadow-md transition-all active:scale-90 border-2"
-                            :class="isDone(h) ? 'bg-[#b7e4c7] border-[#b7e4c7] text-white scale-in' : 'bg-white border-white text-gray-200'">
+                    <button @click="complete(h, dateKey)" class="w-14 h-14 rounded-2xl flex items-center justify-center shadow-md transition-all active:scale-90 border-2" :class="isDone(h, dateKey) ? 'bg-[#b7e4c7] border-[#b7e4c7] text-white scale-in' : 'bg-white border-white text-gray-200'">
                         <i class="fas fa-check text-xl"></i>
                     </button>
                 </div>
 
                 <div class="absolute bottom-0 left-0 h-1.5 bg-gray-100/50 w-full">
-                    <div class="h-full transition-all duration-500 ease-out" 
-                         :style="{width: Math.min(100, getPercent(h)) + '%', background: h.color}"></div>
+                    <div class="h-full transition-all duration-500 ease-out" :style="{width: Math.min(100, getPercent(h, dateKey)) + '%', background: h.color}"></div>
                 </div>
             </div>
-
             <div class="h-12"></div>
         </div>
 
@@ -157,18 +141,12 @@
                 <div class="flex justify-between items-center mb-6">
                     <span class="font-black text-xl text-[#5d576b]">Calendar</span>
                 </div>
-                
                 <div class="grid grid-cols-7 gap-3 mb-2">
                     <div v-for="d in ['S','M','T','W','T','F','S']" class="text-center text-[10px] font-bold opacity-30">{{d}}</div>
-                    
-                    <div v-for="day in 28" :key="day" 
-                         class="aspect-square rounded-xl flex items-center justify-center text-xs font-bold border transition-all"
-                         :class="getDayClass(day).cls"
-                         :style="getDayClass(day).style">
+                    <div v-for="day in 28" :key="day" class="aspect-square rounded-xl flex items-center justify-center text-xs font-bold border transition-all" :class="getDayClass(day).cls" :style="getDayClass(day).style">
                         {{ day }}
                     </div>
                 </div>
-                
                 <div class="flex justify-center gap-4 text-[10px] font-bold opacity-50 mt-6">
                     <span class="flex items-center"><div class="w-3 h-3 bg-gray-100 rounded mr-1"></div> Empty</span>
                     <span class="flex items-center"><div class="w-3 h-3 bg-[#e2d0f9] rounded mr-1"></div> Done</span>
@@ -180,11 +158,14 @@
         <div v-if="view === 'review'" class="space-y-6 pt-2">
             
             <div class="glass p-6">
-                <h3 class="font-black text-lg text-[#5d576b] mb-4 flex items-center">
-                    <i class="fas fa-chart-bar mr-2 text-[#e2d0f9]"></i> This Week
-                </h3>
+                <h3 class="font-black text-lg text-[#5d576b] mb-2 flex items-center"><i class="fas fa-edit mr-2 text-[#e2d0f9]"></i> Edit History</h3>
+                <p class="text-xs font-bold opacity-40 mb-4">Tap any day below to edit records.</p>
+
                 <div class="space-y-4">
-                    <div v-for="day in thisWeek" :key="day.date" class="flex items-center justify-between">
+                    <div v-for="day in thisWeek" :key="day.date" 
+                         @click="openEditModal(day)"
+                         class="flex items-center justify-between active:scale-95 transition-transform cursor-pointer p-2 hover:bg-white/50 rounded-xl">
+                        
                         <div class="flex flex-col w-24">
                             <span class="text-xs font-bold opacity-60 uppercase">{{ day.label }}</span>
                             <span v-if="day.surpassed" class="text-[9px] font-black text-[#b7e4c7] animate-pulse">🔥 SURPASS</span>
@@ -194,15 +175,17 @@
                             <div class="h-full bg-[#e2d0f9]" :style="{width: Math.min(100, day.percent) + '%'}"></div>
                             <div v-if="day.surpassed" class="absolute top-0 left-0 h-full bg-[#faedcb] mix-blend-multiply" style="width: 100%"></div>
                         </div>
-                        <span class="text-xs font-black w-8 text-right">{{ day.score }}/{{ habits.length }}</span>
+                        
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-black w-8 text-right">{{ day.score }}/{{ habits.length }}</span>
+                            <i class="fas fa-chevron-right text-[10px] text-gray-300"></i>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div class="glass p-6">
-                <h3 class="font-black text-lg text-[#5d576b] mb-4 flex items-center">
-                    <i class="fas fa-trophy mr-2 text-[#b7e4c7]"></i> Monthly Totals
-                </h3>
+                <h3 class="font-black text-lg text-[#5d576b] mb-4 flex items-center"><i class="fas fa-trophy mr-2 text-[#b7e4c7]"></i> Monthly Totals</h3>
                 <div class="grid grid-cols-2 gap-3">
                     <div v-for="h in habits" :key="h.id" class="bg-white/60 p-3 rounded-2xl border border-white shadow-sm">
                         <div class="flex items-center gap-2 mb-2">
@@ -212,37 +195,27 @@
                             <span class="text-xs font-bold truncate">{{ h.name }}</span>
                         </div>
                         <div class="text-2xl font-black text-[#5d576b]">
-                            {{ getMonthlyTotal(h) }}
-                            <span class="text-[10px] font-bold opacity-40 ml-1">{{ h.unit }}</span>
+                            {{ getMonthlyTotal(h) }} <span class="text-[10px] font-bold opacity-40 ml-1">{{ h.unit }}</span>
                         </div>
                     </div>
                 </div>
             </div>
-
         </div>
-
     </main>
 
     <nav class="fixed bottom-0 w-full bg-white/90 backdrop-blur-xl border-t border-gray-100 pb-8 pt-3 flex justify-around h-[90px] z-30">
         <button @click="view='today'" class="flex flex-col items-center w-16 transition-all active:scale-95" :class="view==='today'?'text-[#5d576b] scale-105':'text-gray-300'">
-            <div class="text-2xl mb-1" :class="view==='today'?'drop-shadow-sm':''"><i class="fas fa-check-square"></i></div>
-            <span class="text-[9px] font-bold tracking-widest">TODAY</span>
+            <div class="text-2xl mb-1" :class="view==='today'?'drop-shadow-sm':''"><i class="fas fa-check-square"></i></div><span class="text-[9px] font-bold tracking-widest">TODAY</span>
         </button>
-        
         <button @click="view='month'" class="flex flex-col items-center w-16 transition-all active:scale-95" :class="view==='month'?'text-[#5d576b] scale-105':'text-gray-300'">
-            <div class="text-2xl mb-1" :class="view==='month'?'drop-shadow-sm':''"><i class="fas fa-calendar-alt"></i></div>
-            <span class="text-[9px] font-bold tracking-widest">MONTH</span>
+            <div class="text-2xl mb-1" :class="view==='month'?'drop-shadow-sm':''"><i class="fas fa-calendar-alt"></i></div><span class="text-[9px] font-bold tracking-widest">MONTH</span>
         </button>
-
         <button @click="view='review'" class="flex flex-col items-center w-16 transition-all active:scale-95" :class="view==='review'?'text-[#5d576b] scale-105':'text-gray-300'">
-            <div class="text-2xl mb-1" :class="view==='review'?'drop-shadow-sm':''"><i class="fas fa-chart-pie"></i></div>
-            <span class="text-[9px] font-bold tracking-widest">REVIEW</span>
+            <div class="text-2xl mb-1" :class="view==='review'?'drop-shadow-sm':''"><i class="fas fa-chart-pie"></i></div><span class="text-[9px] font-bold tracking-widest">REVIEW</span>
         </button>
     </nav>
 
-    <button v-if="view === 'today'" 
-            @click="showModal=true" 
-            class="fixed bottom-28 right-6 w-16 h-16 bg-[#5d576b] text-white rounded-full shadow-xl flex items-center justify-center z-40 text-2xl active:scale-90 transition-transform border-4 border-white/50 backdrop-blur-sm">
+    <button v-if="view === 'today'" @click="showModal=true" class="fixed bottom-28 right-6 w-16 h-16 bg-[#5d576b] text-white rounded-full shadow-xl flex items-center justify-center z-40 text-2xl active:scale-90 transition-transform border-4 border-white/50 backdrop-blur-sm">
         <i class="fas fa-plus"></i>
     </button>
 
@@ -252,19 +225,10 @@
             <div class="w-12 h-1 bg-gray-200 rounded-full mx-auto mb-6"></div>
             <h2 class="text-2xl font-black mb-6 text-[#5d576b]">Create Habit</h2>
             <div class="space-y-5">
-                <div>
-                    <label class="text-xs font-bold uppercase opacity-40 ml-1">Habit Name</label>
-                    <input v-model="newH.name" placeholder="e.g. Read Book" class="w-full bg-gray-50 p-4 rounded-2xl font-bold outline-none text-lg text-[#5d576b] focus:ring-2 focus:ring-[#b7e4c7] transition-all">
-                </div>
+                <div><label class="text-xs font-bold uppercase opacity-40 ml-1">Name</label><input v-model="newH.name" placeholder="e.g. Read Book" class="w-full bg-gray-50 p-4 rounded-2xl font-bold outline-none text-lg text-[#5d576b] focus:ring-2 focus:ring-[#b7e4c7]"></div>
                 <div class="flex gap-4">
-                    <div class="w-1/3">
-                        <label class="text-xs font-bold uppercase opacity-40 ml-1">Target</label>
-                        <input v-model.number="newH.target" type="number" class="w-full bg-gray-50 p-4 rounded-2xl font-bold outline-none text-lg text-center focus:ring-2 focus:ring-[#b7e4c7]">
-                    </div>
-                    <div class="flex-1">
-                        <label class="text-xs font-bold uppercase opacity-40 ml-1">Unit</label>
-                        <input v-model="newH.unit" placeholder="mins/times" class="w-full bg-gray-50 p-4 rounded-2xl font-bold outline-none text-lg focus:ring-2 focus:ring-[#b7e4c7]">
-                    </div>
+                    <div class="w-1/3"><label class="text-xs font-bold uppercase opacity-40 ml-1">Target</label><input v-model.number="newH.target" type="number" class="w-full bg-gray-50 p-4 rounded-2xl font-bold outline-none text-lg text-center focus:ring-2 focus:ring-[#b7e4c7]"></div>
+                    <div class="flex-1"><label class="text-xs font-bold uppercase opacity-40 ml-1">Unit</label><input v-model="newH.unit" placeholder="mins/times" class="w-full bg-gray-50 p-4 rounded-2xl font-bold outline-none text-lg focus:ring-2 focus:ring-[#b7e4c7]"></div>
                 </div>
                 <div>
                     <label class="text-xs font-bold uppercase opacity-40 ml-1 mb-2 block">Color</label>
@@ -275,13 +239,52 @@
                 <div>
                     <label class="text-xs font-bold uppercase opacity-40 ml-1 mb-2 block">Icon</label>
                     <div class="flex gap-3 overflow-x-auto no-scrollbar py-1">
-                        <div v-for="icon in allIcons" :key="icon" @click="newH.icon=icon" class="w-12 h-12 rounded-2xl cursor-pointer border-2 transition-transform hover:scale-110 shadow-sm flex-shrink-0 flex items-center justify-center" :style="{borderColor: newH.icon===icon?'#5d576b':'transparent'}">
-                            <i :class="icon" class="text-xl text-[#5d576b]"></i>
-                        </div>
+                        <div v-for="icon in allIcons" :key="icon" @click="newH.icon=icon" class="w-12 h-12 rounded-2xl cursor-pointer border-2 transition-transform hover:scale-110 shadow-sm flex-shrink-0 flex items-center justify-center" :style="{borderColor: newH.icon===icon?'#5d576b':'transparent'}"><i :class="icon" class="text-xl text-[#5d576b]"></i></div>
                     </div>
                 </div>
             </div>
             <button @click="addHabit" class="w-full bg-[#5d576b] text-white py-4 rounded-2xl font-bold text-lg mt-8 shadow-lg active:scale-95 transition-transform">Save Habit</button>
+        </div>
+    </div>
+
+    <div v-if="showSettings" class="fixed inset-0 z-50 flex items-center justify-center p-6">
+        <div class="absolute inset-0 bg-black/30 backdrop-blur-sm" @click="showSettings=false"></div>
+        <div class="bg-white w-full max-w-sm rounded-[32px] p-6 relative shadow-2xl scale-in">
+            <h2 class="text-2xl font-black mb-4 text-[#5d576b]">Data Backup</h2>
+            <button @click="exportData" class="w-full py-4 bg-[#e2d0f9] text-[#5d576b] rounded-2xl font-bold text-lg shadow-sm flex items-center justify-center gap-2 active:scale-95 transition-transform"><i class="fas fa-copy"></i> Copy Data Code</button>
+            <div class="border-t border-gray-100 pt-4 mt-4">
+                <p class="text-xs font-bold uppercase opacity-40 mb-2">Restore Data</p>
+                <textarea v-model="importString" placeholder="Paste your data code here..." class="w-full bg-gray-50 rounded-2xl p-3 text-xs font-mono h-20 mb-3"></textarea>
+                <button @click="importData" class="w-full py-3 border-2 border-dashed border-gray-300 text-gray-400 rounded-2xl font-bold hover:bg-gray-50 transition-colors">Restore from Code</button>
+            </div>
+            <button @click="showSettings=false" class="absolute top-4 right-4 text-gray-300 hover:text-gray-500"><i class="fas fa-times text-xl"></i></button>
+        </div>
+    </div>
+
+    <div v-if="editingDate" class="fixed inset-0 z-50 flex items-end justify-center">
+        <div class="absolute inset-0 bg-black/20 backdrop-blur-sm transition-opacity" @click="editingDate=null"></div>
+        <div class="bg-white w-full max-w-md rounded-t-[32px] p-6 slide-up relative shadow-2xl pb-12 max-h-[85vh] overflow-y-auto">
+            <div class="w-12 h-1 bg-gray-200 rounded-full mx-auto mb-6"></div>
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-black text-[#5d576b]">Edit History</h2>
+                <span class="text-xs font-bold bg-gray-100 px-3 py-1 rounded-full text-gray-500">{{ editingDateLabel }}</span>
+            </div>
+            
+            <div class="space-y-4">
+                <div v-for="h in habits" :key="h.id" class="bg-gray-50 rounded-2xl p-4">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs text-white" :style="{background: h.color}"><i :class="h.icon"></i></div>
+                        <span class="font-bold text-[#5d576b] flex-1">{{ h.name }}</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between gap-3 h-12 bg-white rounded-xl px-1 border border-gray-200">
+                        <button @click="update(h, -1, editingDate)" class="w-10 h-full text-gray-400"><i class="fas fa-minus"></i></button>
+                        <input type="number" v-model.number="logs[editingDate][h.id]" class="w-full h-full text-center font-black text-xl text-[#5d576b] bg-transparent outline-none">
+                        <button @click="update(h, 1, editingDate)" class="w-10 h-full text-[#5d576b]"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+            <button @click="editingDate=null" class="w-full mt-6 py-4 bg-[#5d576b] text-white rounded-2xl font-bold shadow-lg">Done</button>
         </div>
     </div>
 
@@ -294,8 +297,18 @@ createApp({
     setup() {
         const view = ref('today');
         const showModal = ref(false);
-        const dateKey = new Date().toISOString().split('T')[0];
+        const showSettings = ref(false);
+        const editingDate = ref(null);
+        const importString = ref('');
         
+        // --- 1. NIGHT OWL LOGIC (Day starts at 02:00 AM) ---
+        const getHabitDate = () => {
+            const now = new Date();
+            now.setHours(now.getHours() - 2); // Shift back 2 hours
+            return now;
+        };
+        const dateKey = getHabitDate().toISOString().split('T')[0];
+
         const logs = ref({ [dateKey]: {} });
         const habits = ref([
             { id: 1, name: "Drink Water", target: 5, unit: "bottles", color: "#ade8f4", icon: "fas fa-tint" },
@@ -307,30 +320,24 @@ createApp({
         const newH = ref({ name:'', target:1, unit:'', color:'#ade8f4', icon:'fas fa-star' });
         const colors = ['#ade8f4', '#b7e4c7', '#ffc8dd', '#e2d0f9', '#fdf0d5', '#ff9aa2', '#a0c4ff'];
         const allIcons = [
-            // Music
-            'fas fa-music', 'fas fa-headphones', 'fas fa-guitar', 'fas fa-microphone', 'fas fa-drum',
-            // Nature & Farming
+            'fas fa-music', 'fas fa-headphones', 'fas fa-guitar', 'fas fa-microphone', 
             'fas fa-tree', 'fas fa-leaf', 'fas fa-seedling', 'fas fa-sun', 'fas fa-cloud-rain',
-            // Sports
             'fas fa-basketball-ball', 'fas fa-futbol', 'fas fa-running', 'fas fa-swimmer', 'fas fa-dumbbell',
-            // Original
-            'fas fa-tint', 'fas fa-language', 'fas fa-stopwatch', 'fas fa-star'
+            'fas fa-tint', 'fas fa-language', 'fas fa-stopwatch', 'fas fa-star', 'fas fa-book', 'fas fa-bed'
         ];
 
-        const update = (h, val) => {
-            if(!logs.value[dateKey]) logs.value[dateKey] = {};
-            const cur = logs.value[dateKey][h.id] || 0;
-            logs.value[dateKey][h.id] = Math.max(0, cur + val);
+        // --- UPDATE LOGIC (Supports specific dates) ---
+        const update = (h, val, targetDate) => {
+            if(!logs.value[targetDate]) logs.value[targetDate] = {};
+            const cur = logs.value[targetDate][h.id] || 0;
+            logs.value[targetDate][h.id] = Math.max(0, cur + val);
         };
 
-        const complete = (h) => {
-            if(!logs.value[dateKey]) logs.value[dateKey] = {};
-            const cur = logs.value[dateKey][h.id] || 0;
-            if (cur >= h.target) {
-                logs.value[dateKey][h.id] = 0;
-            } else {
-                logs.value[dateKey][h.id] = h.target;
-            }
+        const complete = (h, targetDate) => {
+            if(!logs.value[targetDate]) logs.value[targetDate] = {};
+            const cur = logs.value[targetDate][h.id] || 0;
+            if (cur >= h.target) logs.value[targetDate][h.id] = 0;
+            else logs.value[targetDate][h.id] = h.target;
         };
 
         const addHabit = () => {
@@ -342,70 +349,91 @@ createApp({
         };
 
         const deleteHabit = (id) => {
-            if(confirm("Delete this habit?")) {
-                habits.value = habits.value.filter(h => h.id !== id);
-            }
+            if(confirm("Delete this habit?")) habits.value = habits.value.filter(h => h.id !== id);
         };
 
-        const isDone = (h) => (logs.value[dateKey]?.[h.id] || 0) >= h.target;
-        const getPercent = (h) => {
-            const val = logs.value[dateKey]?.[h.id] || 0;
+        // --- EDIT REVIEW LOGIC ---
+        const openEditModal = (dayData) => {
+            // Ensure entry exists
+            if(!logs.value[dayData.date]) logs.value[dayData.date] = {};
+            editingDate.value = dayData.date;
+        };
+
+        const editingDateLabel = computed(() => {
+            if(!editingDate.value) return '';
+            const d = new Date(editingDate.value);
+            return d.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+        });
+
+        // --- BACKUP ---
+        const exportData = () => {
+            const data = JSON.stringify({ h: habits.value, l: logs.value });
+            navigator.clipboard.writeText(data).then(() => alert("Data Code Copied! Paste it in your Notes app."));
+        };
+        const importData = () => {
+            try {
+                const data = JSON.parse(importString.value);
+                if(data.h && data.l) {
+                    if(confirm("Overwrite data?")) {
+                        habits.value = data.h; logs.value = data.l;
+                        showSettings.value = false; importString.value = '';
+                    }
+                } else alert("Invalid Code");
+            } catch(e) { alert("Invalid Code format"); }
+        };
+
+        // --- HELPERS ---
+        const isDone = (h, targetDate) => (logs.value[targetDate]?.[h.id] || 0) >= h.target;
+        
+        const getPercent = (h, targetDate) => {
+            const val = logs.value[targetDate]?.[h.id] || 0;
             return (val / h.target) * 100;
         };
         
-        const todayLabel = computed(() => new Date().toLocaleDateString('en-US', { weekday:'long', month:'short', day:'numeric' }));
+        const todayLabel = computed(() => getHabitDate().toLocaleDateString('en-US', { weekday:'long', month:'short', day:'numeric' }));
         
         const viewTitle = computed(() => {
             if(view.value === 'today') return "TszTung's Habit";
             if(view.value === 'month') return "Calendar";
             return "Review";
         });
-
         const todayProgress = computed(() => {
             if(!habits.value.length) return 0;
             let doneCount = 0;
-            habits.value.forEach(h => { if(isDone(h)) doneCount++; });
+            habits.value.forEach(h => { if(isDone(h, dateKey)) doneCount++; });
             return Math.round((doneCount / habits.value.length) * 100);
         });
 
         const getDayClass = (day) => {
             const dStr = `2026-02-${String(day).padStart(2,'0')}`;
-            const todayNum = new Date().getDate();
+            const todayNum = getHabitDate().getDate();
             if(day > todayNum) return { cls: 'bg-gray-50 text-gray-200 border-transparent', style: {} };
-            
             const dayLog = logs.value[dStr] || {};
             let done = 0;
-            habits.value.forEach(h => {
-                if((dayLog[h.id] || 0) >= h.target) done++;
-            });
-            
+            habits.value.forEach(h => { if((dayLog[h.id] || 0) >= h.target) done++; });
             if(done === 0) return { cls: 'bg-white border-gray-100 text-gray-300', style: {} };
             if(done === habits.value.length) return { cls: 'text-white border-[#b7e4c7] font-black', style: { background: '#b7e4c7' } };
             return { cls: 'text-white border-[#e2d0f9]', style: { background: '#e2d0f9' } };
         };
 
         const thisWeek = computed(() => {
-            const today = new Date();
+            const today = getHabitDate();
             const day = today.getDay();
             const diff = today.getDate() - day + (day === 0 ? -6 : 1);
             const monday = new Date(today.setDate(diff));
-
             const days = [];
             for (let i = 0; i < 7; i++) {
                 const d = new Date(monday);
                 d.setDate(monday.getDate() + i);
                 const iso = d.toISOString().split('T')[0];
                 const dayLog = logs.value[iso] || {};
-                
                 let score = 0;
                 let surpassed = false;
-
                 habits.value.forEach(h => {
                     const val = dayLog[h.id] || 0;
                     if (val >= h.target) score++;
                     if (val > h.target) surpassed = true;
                 });
-
                 days.push({
                     date: iso,
                     label: d.toLocaleDateString('en-US', { weekday: 'short' }),
@@ -419,28 +447,26 @@ createApp({
 
         const getMonthlyTotal = (h) => {
             let total = 0;
-            Object.keys(logs.value).forEach(k => {
-                if(k.startsWith('2026-02')) total += (logs.value[k][h.id] || 0);
-            });
+            Object.keys(logs.value).forEach(k => { if(k.startsWith('2026-02')) total += (logs.value[k][h.id] || 0); });
             return total;
         };
 
         onMounted(() => {
-            const h = localStorage.getItem('habits_v6');
-            const l = localStorage.getItem('logs_v6');
+            const h = localStorage.getItem('habits_v8');
+            const l = localStorage.getItem('logs_v8');
             if(h) habits.value = JSON.parse(h);
             if(l) logs.value = JSON.parse(l);
             if(!logs.value[dateKey]) logs.value[dateKey] = {};
         });
 
         watch([habits, logs], () => {
-            localStorage.setItem('habits_v6', JSON.stringify(habits.value));
-            localStorage.setItem('logs_v6', JSON.stringify(logs.value));
+            localStorage.setItem('habits_v8', JSON.stringify(habits.value));
+            localStorage.setItem('logs_v8', JSON.stringify(logs.value));
         }, { deep: true });
 
         return { 
-            view, habits, logs, dateKey, showModal, newH, colors, allIcons,
-            update, complete, addHabit, deleteHabit,
+            view, habits, logs, dateKey, showModal, showSettings, editingDate, editingDateLabel, newH, colors, allIcons, importString,
+            update, complete, addHabit, deleteHabit, exportData, importData, openEditModal,
             isDone, getPercent, todayLabel, todayProgress, viewTitle,
             getDayClass, thisWeek, getMonthlyTotal
         };
