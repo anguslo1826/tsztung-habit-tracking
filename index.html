@@ -15,7 +15,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@700&display=swap" rel="stylesheet">
     
     <style>
-        /* LIGHT MODE (Default) */
+        /* LIGHT MODE */
         :root {
             --bg: #fdfbf7;
             --text: #5d576b;
@@ -25,7 +25,7 @@
             --input-bg: rgba(255,255,255,0.5);
         }
 
-        /* DARK MODE (Applied to body via JS) */
+        /* DARK MODE */
         body.dark-mode {
             --bg: #2d2a32;
             --text: #e2d0f9;
@@ -39,8 +39,7 @@
             font-family: 'Zen Maru Gothic', sans-serif; 
             background: var(--bg); 
             color: var(--text); 
-            height: 100dvh; 
-            width: 100vw; 
+            height: 100dvh; width: 100vw; 
             overflow: hidden; 
             transition: background 0.3s, color 0.3s; 
             -webkit-tap-highlight-color: transparent; 
@@ -57,6 +56,7 @@
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        textarea:focus, input:focus { outline: none; }
         
         .slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -88,7 +88,10 @@
                 <p class="text-xs font-bold opacity-40 uppercase tracking-widest mt-1">{{ todayLabel }}</p>
             </div>
             <div class="flex items-center gap-3">
+                <button @click="showTimer=true" class="w-10 h-10 rounded-full border shadow-sm flex items-center justify-center active:scale-90 transition-transform" :class="isDark?'bg-white/10 border-white/20 text-white':'bg-white border-gray-100 text-[#5d576b]'"><i class="fas fa-stopwatch"></i></button>
+                
                 <button @click="showSettings=true" class="w-10 h-10 rounded-full border shadow-sm flex items-center justify-center active:scale-90 transition-transform" :class="isDark?'bg-white/10 border-white/20 text-white':'bg-white border-gray-100 text-[#5d576b]'"><i class="fas fa-cog"></i></button>
+                
                 <div class="w-16 h-16 rounded-full border-[6px] flex items-center justify-center relative shadow-sm" :class="isDark?'bg-[#2d2a32] border-white/10':'bg-white border-gray-100'">
                     <span class="text-xs font-black">{{ todayProgress }}%</span>
                     <svg class="absolute inset-0 w-full h-full -rotate-90 transform" viewBox="0 0 36 36"><path :stroke-dasharray="todayProgress + ', 100'" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#b7e4c7" stroke-width="4" stroke-linecap="round"/></svg>
@@ -100,6 +103,14 @@
     <main ref="mainContainer" class="flex-1 overflow-y-auto px-5 pb-32 space-y-5 no-scrollbar relative z-10">
         
         <div v-if="view === 'today'" class="space-y-4 pt-2">
+            
+            <div class="glass p-4 flex justify-between items-center">
+                <span class="text-xs font-bold opacity-40 uppercase">Mood</span>
+                <div class="flex gap-2">
+                    <button v-for="m in moods" :key="m" @click="setMood(m)" class="text-2xl transition-transform hover:scale-125 active:scale-90 opacity-50" :class="{'opacity-100 scale-125': logs[dateKey].mood === m}">{{ m }}</button>
+                </div>
+            </div>
+
             <div v-for="h in habits" :key="h.id" class="glass p-5 relative overflow-hidden transition-all active:scale-[0.99]">
                 <div class="flex items-center gap-4 mb-5">
                     <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-sm text-white transition-colors" :style="{background: h.color}"><i :class="h.icon"></i></div>
@@ -122,6 +133,12 @@
                 </div>
                 <div class="absolute bottom-0 left-0 h-1.5 w-full bg-black/5"><div class="h-full transition-all duration-500 ease-out" :style="{width: Math.min(100, getPercent(h, dateKey)) + '%', background: h.color}"></div></div>
             </div>
+
+            <div class="glass p-5">
+                <label class="text-xs font-bold opacity-40 uppercase mb-2 block">Daily Memo</label>
+                <textarea v-model="logs[dateKey].memo" placeholder="How was your day?" class="w-full h-24 bg-transparent resize-none text-sm font-bold leading-relaxed placeholder-current placeholder-opacity-30" :class="isDark?'text-white':'text-[#5d576b]'"></textarea>
+            </div>
+
             <div class="h-12"></div>
         </div>
 
@@ -155,14 +172,12 @@
             <div class="glass p-6">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="font-black text-lg flex items-center"><i class="fas fa-trophy mr-2 text-[#b7e4c7]"></i> Totals</h3>
-                    
                     <div class="flex items-center gap-2 bg-black/5 rounded-full px-2 py-1">
                         <button @click="changeReviewMonth(-1)" class="w-6 h-6 flex items-center justify-center opacity-50 hover:opacity-100"><i class="fas fa-chevron-left text-xs"></i></button>
                         <span class="text-xs font-bold uppercase w-16 text-center">{{ reviewMonthLabel }}</span>
                         <button @click="changeReviewMonth(1)" class="w-6 h-6 flex items-center justify-center opacity-50 hover:opacity-100"><i class="fas fa-chevron-right text-xs"></i></button>
                     </div>
                 </div>
-                
                 <div class="grid grid-cols-2 gap-3">
                     <div v-for="h in habits" :key="h.id" class="p-3 rounded-2xl border shadow-sm" style="background: var(--input-bg); border-color: var(--card-border);">
                         <div class="flex items-center gap-2 mb-2"><div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] text-white" :style="{background: h.color}"><i :class="h.icon"></i></div><span class="text-xs font-bold truncate">{{ h.name }}</span></div>
@@ -180,6 +195,29 @@
     </nav>
 
     <button v-if="view === 'today'" @click="showModal=true" class="fixed bottom-28 right-6 w-16 h-16 bg-[#5d576b] text-white rounded-full shadow-xl flex items-center justify-center z-40 text-2xl active:scale-90 transition-transform border-4 border-white/50 backdrop-blur-sm"><i class="fas fa-plus"></i></button>
+
+    <div v-if="showTimer" class="fixed inset-0 z-50 flex items-center justify-center p-6">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="showTimer=false"></div>
+        <div class="w-full max-w-sm rounded-[32px] p-8 relative shadow-2xl scale-in text-center glass">
+            <h2 class="text-2xl font-black mb-6">Focus Timer</h2>
+            
+            <div class="text-6xl font-mono font-black mb-8 transition-all" :class="timerActive ? 'text-[#5d576b] scale-110' : 'text-gray-300'">
+                {{ formatTime(timerSeconds) }}
+            </div>
+            
+            <div v-if="!timerActive" class="flex justify-center gap-3 mb-8">
+                <button @click="timerSeconds=600" class="px-4 py-2 rounded-xl font-bold bg-black/5 hover:bg-black/10">10m</button>
+                <button @click="timerSeconds=1800" class="px-4 py-2 rounded-xl font-bold bg-black/5 hover:bg-black/10">30m</button>
+                <button @click="timerSeconds=3600" class="px-4 py-2 rounded-xl font-bold bg-black/5 hover:bg-black/10">60m</button>
+            </div>
+
+            <button @click="toggleTimer" class="w-20 h-20 rounded-full flex items-center justify-center text-3xl text-white shadow-lg mx-auto transition-transform active:scale-90" :class="timerActive ? 'bg-[#e2d0f9]' : 'bg-[#5d576b]'">
+                <i class="fas" :class="timerActive ? 'fa-pause' : 'fa-play'"></i>
+            </button>
+            
+            <button @click="showTimer=false" class="absolute top-6 right-6 opacity-50 hover:opacity-100"><i class="fas fa-times text-xl"></i></button>
+        </div>
+    </div>
 
     <div v-if="showModal" class="fixed inset-0 z-50 flex items-end justify-center">
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="showModal=false"></div>
@@ -216,6 +254,14 @@
         <div class="w-full max-w-md rounded-t-[32px] p-6 slide-up relative shadow-2xl pb-12 max-h-[85vh] overflow-y-auto glass">
             <div class="w-12 h-1 rounded-full mx-auto mb-6 bg-current opacity-20"></div>
             <div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-black">Edit History</h2><span class="text-xs font-bold px-3 py-1 rounded-full bg-current bg-opacity-10">{{ editingDateLabel }}</span></div>
+            
+            <div class="p-4 rounded-2xl mb-4 bg-black/5">
+                <span class="text-xs font-bold opacity-40 uppercase block mb-2">Mood</span>
+                <div class="flex gap-2">
+                    <button v-for="m in moods" :key="m" @click="logs[editingDate].mood = m" class="text-xl opacity-50" :class="{'opacity-100 scale-125': logs[editingDate].mood === m}">{{ m }}</button>
+                </div>
+            </div>
+
             <div class="space-y-4">
                 <div v-for="h in habits" :key="h.id" class="rounded-2xl p-4 relative overflow-hidden" style="background: var(--input-bg);">
                     <div class="flex items-center gap-3 mb-3 relative z-10">
@@ -244,31 +290,29 @@ createApp({
         const view = ref('today');
         const showModal = ref(false);
         const showSettings = ref(false);
+        const showTimer = ref(false);
         const editingDate = ref(null);
         const importString = ref('');
         const mainContainer = ref(null);
         const userName = ref('TszTung');
         const isDark = ref(false);
         
-        // --- 1. RELIABLE SCROLL FIX ---
-        watch(view, async () => { 
-            await nextTick(); 
-            if(mainContainer.value) {
-                mainContainer.value.scrollTo({ top: 0, behavior: 'auto' }); // Instant jump
-            }
-        });
+        // MOODS
+        const moods = ['😭', '☹️', '😐', '🙂', '🤩'];
 
-        // --- 2. DARK MODE BODY WATCHER ---
-        watch(isDark, (val) => {
-            document.body.classList.toggle('dark-mode', val);
-        }, { immediate: true });
+        // TIMER STATE
+        const timerSeconds = ref(600);
+        const timerActive = ref(false);
+        let timerInterval = null;
 
-        // --- 3. TIME & DATE LOGIC ---
+        watch(view, async () => { await nextTick(); if(mainContainer.value) mainContainer.value.scrollTo({ top: 0, behavior: 'auto' }); });
+        watch(isDark, (val) => { document.body.classList.toggle('dark-mode', val); }, { immediate: true });
+
         const getHabitDate = () => { const now = new Date(); now.setHours(now.getHours() - 2); return now; };
         const dateKey = getHabitDate().toISOString().split('T')[0];
         
         const browsingDate = ref(getHabitDate());
-        const reviewDate = ref(getHabitDate()); // Separate date for Review tab
+        const reviewDate = ref(getHabitDate());
 
         const logs = ref({ [dateKey]: {} });
         const habits = ref([
@@ -305,6 +349,11 @@ createApp({
             else { logs.value[targetDate][h.id] = h.target; if(targetDate === dateKey) triggerConfetti(); }
         };
 
+        const setMood = (m) => {
+            if(!logs.value[dateKey]) logs.value[dateKey] = {};
+            logs.value[dateKey].mood = m;
+        };
+
         const getStreak = (h) => {
             let streak = 0;
             const today = getHabitDate();
@@ -317,22 +366,38 @@ createApp({
             return streak;
         };
 
+        // TIMER LOGIC
+        const formatTime = (s) => {
+            const m = Math.floor(s / 60).toString().padStart(2, '0');
+            const sec = (s % 60).toString().padStart(2, '0');
+            return `${m}:${sec}`;
+        };
+        const toggleTimer = () => {
+            if(timerActive.value) {
+                clearInterval(timerInterval);
+                timerActive.value = false;
+            } else {
+                timerActive.value = true;
+                timerInterval = setInterval(() => {
+                    if(timerSeconds.value > 0) timerSeconds.value--;
+                    else { clearInterval(timerInterval); timerActive.value = false; alert("Time's up!"); }
+                }, 1000);
+            }
+        };
+
         const addHabit = () => { if(newH.value.name) { habits.value.push({ ...newH.value, id: Date.now() }); showModal.value = false; newH.value = { name:'', target:1, unit:'', color:'#ade8f4', icon:'fas fa-star' }; } };
         const deleteHabit = (id) => { if(confirm("Delete this habit?")) habits.value = habits.value.filter(h => h.id !== id); };
         
-        // --- CALENDAR LOGIC (Main) ---
         const changeMonth = (dir) => { const d = new Date(browsingDate.value); d.setMonth(d.getMonth() + dir); browsingDate.value = d; };
         const browsingMonthLabel = computed(() => browsingDate.value.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }));
         const daysInMonth = computed(() => { const y = browsingDate.value.getFullYear(); const m = browsingDate.value.getMonth(); return new Date(y, m + 1, 0).getDate(); });
         const monthOffset = computed(() => { const y = browsingDate.value.getFullYear(); const m = browsingDate.value.getMonth(); return new Date(y, m, 1).getDay(); });
 
         const getDayClass = (day) => {
-            const y = browsingDate.value.getFullYear();
-            const m = browsingDate.value.getMonth() + 1;
+            const y = browsingDate.value.getFullYear(); const m = browsingDate.value.getMonth() + 1;
             const dStr = `${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
             const today = getHabitDate();
-            const cellDate = new Date(y, m-1, day);
-            if(cellDate > today) return { cls: 'opacity-20 pointer-events-none border-transparent', style: {} };
+            if(new Date(y, m-1, day) > today) return { cls: 'opacity-20 pointer-events-none border-transparent', style: {} };
             let done = 0; habits.value.forEach(h => { if((logs.value[dStr]?.[h.id]||0) >= h.target) done++; });
             if(done === 0) return { cls: 'bg-current opacity-5 border-transparent', style: {} };
             if(done === habits.value.length) return { cls: 'text-white font-black', style: { background: '#b7e4c7' } };
@@ -347,17 +412,12 @@ createApp({
             editingDate.value = dStr;
         };
 
-        // --- REVIEW NAVIGATION (Separate) ---
         const changeReviewMonth = (dir) => { const d = new Date(reviewDate.value); d.setMonth(d.getMonth() + dir); reviewDate.value = d; };
         const reviewMonthLabel = computed(() => reviewDate.value.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }));
         
         const getReviewMonthlyTotal = (h) => { 
-            let t=0;
-            const y = reviewDate.value.getFullYear();
-            const m = String(reviewDate.value.getMonth() + 1).padStart(2, '0');
-            const prefix = `${y}-${m}`;
-            Object.keys(logs.value).forEach(k => { if(k.startsWith(prefix)) t+=(logs.value[k][h.id]||0); }); 
-            return t; 
+            let t=0; const y = reviewDate.value.getFullYear(); const m = String(reviewDate.value.getMonth() + 1).padStart(2, '0'); const prefix = `${y}-${m}`;
+            Object.keys(logs.value).forEach(k => { if(k.startsWith(prefix)) t+=(logs.value[k][h.id]||0); }); return t; 
         };
 
         const openEditModal = (dayData) => { if(!logs.value[dayData.date]) logs.value[dayData.date] = {}; editingDate.value = dayData.date; };
@@ -388,25 +448,26 @@ createApp({
         });
 
         onMounted(() => {
-            const h = localStorage.getItem('habits_v13'); if(h) habits.value = JSON.parse(h);
-            const l = localStorage.getItem('logs_v13'); if(l) logs.value = JSON.parse(l);
-            const u = localStorage.getItem('user_v13'); if(u) userName.value = u;
-            const d = localStorage.getItem('dark_v13'); if(d) isDark.value = JSON.parse(d);
+            const h = localStorage.getItem('habits_v14'); if(h) habits.value = JSON.parse(h);
+            const l = localStorage.getItem('logs_v14'); if(l) logs.value = JSON.parse(l);
+            const u = localStorage.getItem('user_v14'); if(u) userName.value = u;
+            const d = localStorage.getItem('dark_v14'); if(d) isDark.value = JSON.parse(d);
             if(!logs.value[dateKey]) logs.value[dateKey] = {};
         });
 
         watch([habits, logs, userName, isDark], () => {
-            localStorage.setItem('habits_v13', JSON.stringify(habits.value));
-            localStorage.setItem('logs_v13', JSON.stringify(logs.value));
-            localStorage.setItem('user_v13', userName.value);
-            localStorage.setItem('dark_v13', JSON.stringify(isDark.value));
+            localStorage.setItem('habits_v14', JSON.stringify(habits.value));
+            localStorage.setItem('logs_v14', JSON.stringify(logs.value));
+            localStorage.setItem('user_v14', userName.value);
+            localStorage.setItem('dark_v14', JSON.stringify(isDark.value));
         }, { deep: true });
 
         return { 
             view, habits, logs, dateKey, showModal, showSettings, editingDate, editingDateLabel, newH, colors, allIcons, importString, mainContainer, userName, isDark, greeting,
             update, complete, addHabit, deleteHabit, exportData, importData, openEditModal, editMonthDay, getStreak, 
             changeMonth, browsingMonthLabel, monthOffset, daysInMonth,
-            changeReviewMonth, reviewMonthLabel, getReviewMonthlyTotal,
+            changeReviewMonth, reviewMonthLabel, getReviewMonthlyTotal, moods, setMood,
+            showTimer, timerSeconds, timerActive, toggleTimer, formatTime,
             isDone, getPercent, todayLabel, todayProgress, viewTitle, getDayClass, thisWeek
         };
     }
