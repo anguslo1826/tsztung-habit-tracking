@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Habit Tracker v11</title>
+    <title>TszTung's Habits</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23e2d0f9'/><circle cx='35' cy='50' r='20' fill='%235d576b'/><circle cx='65' cy='60' r='15' fill='white'/><path d='M60 45 L65 60 L70 45 Z' fill='white'/><path d='M35 40 Q45 40 50 60' stroke='white' stroke-width='3' fill='none'/></svg>">
     
@@ -12,6 +12,7 @@
     <script src="https://unpkg.com/vue@3.4.19/dist/vue.global.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@700&display=swap" rel="stylesheet">
     
     <style>
         :root {
@@ -19,52 +20,23 @@
             --text: #5d576b;
             --card-bg: rgba(255,255,255,0.85);
             --card-border: rgba(255,255,255,0.9);
-            --input-bg: rgba(255,255,255,0.8);
         }
-
-        /* DARK MODE VARIABLES */
         .dark-mode {
             --bg: #2d2a32;
             --text: #e2d0f9;
             --card-bg: rgba(60, 56, 66, 0.85);
             --card-border: rgba(255,255,255,0.1);
-            --input-bg: rgba(0,0,0,0.2);
         }
-        
-        body { 
-            font-family: 'Zen Maru Gothic', sans-serif; 
-            background: var(--bg); 
-            color: var(--text); 
-            height: 100dvh; 
-            width: 100vw;
-            overflow: hidden; 
-            transition: background 0.3s, color 0.3s;
-            -webkit-tap-highlight-color: transparent;
-        }
-        
-        .glass { 
-            background: var(--card-bg); 
-            backdrop-filter: blur(12px); 
-            border: 1px solid var(--card-border); 
-            border-radius: 24px; 
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05); 
-            position: relative;
-            z-index: 10;
-            transition: background 0.3s, border 0.3s;
-        }
-
+        body { font-family: 'Zen Maru Gothic', sans-serif; background: var(--bg); color: var(--text); height: 100dvh; width: 100vw; overflow: hidden; transition: 0.3s; -webkit-tap-highlight-color: transparent; }
+        .glass { background: var(--card-bg); backdrop-filter: blur(12px); border: 1px solid var(--card-border); border-radius: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        
         .slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        
         .scale-in { animation: scaleIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
         @keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
         .sticker-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
         .bunny-sticker { position: absolute; opacity: 0.15; transition: transform 0.5s; }
-        
         [v-cloak] { display: none; }
     </style>
 </head>
@@ -105,21 +77,17 @@
                         <div class="text-xs font-bold opacity-40">Target: {{ h.target }} {{ h.unit }}</div>
                     </div>
                     <div v-if="getStreak(h) > 1" class="flex flex-col items-center mr-2 animate-pulse">
-                        <i class="fas fa-fire text-[#fbc4ab] text-lg drop-shadow-sm"></i>
-                        <span class="text-[9px] font-black opacity-60">{{ getStreak(h) }} Days</span>
+                        <i class="fas fa-fire text-[#fbc4ab] text-lg drop-shadow-sm"></i><span class="text-[9px] font-black opacity-60">{{ getStreak(h) }} Days</span>
                     </div>
                     <button @click="deleteHabit(h.id)" class="opacity-20 hover:opacity-100 p-2"><i class="fas fa-times text-xs"></i></button>
                 </div>
-
                 <div class="flex items-center justify-between gap-3 relative z-10">
                     <div class="flex-1 h-14 rounded-2xl flex items-center justify-between px-1 shadow-sm border relative" :class="isDark?'bg-white/10 border-white/10':'bg-white/80 border-white'">
                         <button @click="update(h, -1, dateKey)" class="w-10 h-10 rounded-xl flex items-center justify-center active:bg-gray-100/10 transition-colors" :class="isDark?'text-white/50':'text-gray-400'"><i class="fas fa-minus"></i></button>
                         <input type="number" v-model.number="logs[dateKey][h.id]" placeholder="0" @focus="$event.target.select()" class="w-full h-full bg-transparent text-center font-black text-2xl outline-none placeholder-gray-200" :class="isDark?'text-white':'text-[#5d576b]'">
                         <button @click="update(h, 1, dateKey)" class="w-10 h-10 rounded-xl flex items-center justify-center active:bg-gray-100/10 transition-colors" :class="isDark?'text-white':'text-[#5d576b]'"><i class="fas fa-plus"></i></button>
                     </div>
-                    <button @click="complete(h, dateKey)" class="w-14 h-14 rounded-2xl flex items-center justify-center shadow-md transition-all active:scale-90 border-2" :class="isDone(h, dateKey) ? 'bg-[#b7e4c7] border-[#b7e4c7] text-white scale-in' : (isDark?'bg-white/10 border-white/10 text-white/20':'bg-white border-white text-gray-200')">
-                        <i class="fas fa-check text-xl"></i>
-                    </button>
+                    <button @click="complete(h, dateKey)" class="w-14 h-14 rounded-2xl flex items-center justify-center shadow-md transition-all active:scale-90 border-2" :class="isDone(h, dateKey) ? 'bg-[#b7e4c7] border-[#b7e4c7] text-white scale-in' : (isDark?'bg-white/10 border-white/10 text-white/20':'bg-white border-white text-gray-200')"><i class="fas fa-check text-xl"></i></button>
                 </div>
                 <div class="absolute bottom-0 left-0 h-1.5 w-full bg-black/5"><div class="h-full transition-all duration-500 ease-out" :style="{width: Math.min(100, getPercent(h, dateKey)) + '%', background: h.color}"></div></div>
             </div>
@@ -128,10 +96,20 @@
 
         <div v-if="view === 'month'" class="space-y-6 pt-2">
             <div class="glass p-6">
-                <div class="flex justify-between items-center mb-6"><span class="font-black text-xl">Calendar</span></div>
+                <div class="flex justify-between items-center mb-6">
+                    <button @click="changeMonth(-1)" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-black/5"><i class="fas fa-chevron-left"></i></button>
+                    <span class="font-black text-xl">{{ browsingMonthLabel }}</span>
+                    <button @click="changeMonth(1)" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-black/5"><i class="fas fa-chevron-right"></i></button>
+                </div>
+                
                 <div class="grid grid-cols-7 gap-3 mb-2">
                     <div v-for="d in ['S','M','T','W','T','F','S']" class="text-center text-[10px] font-bold opacity-30">{{d}}</div>
-                    <div v-for="day in 28" :key="day" @click="editMonthDay(day)" class="aspect-square rounded-xl flex items-center justify-center text-xs font-bold border transition-all cursor-pointer hover:scale-105" :class="getDayClass(day).cls" :style="getDayClass(day).style">{{ day }}</div>
+                    <div v-for="n in monthOffset" class="aspect-square"></div>
+                    <div v-for="day in daysInMonth" :key="day" 
+                         @click="editMonthDay(day)"
+                         class="aspect-square rounded-xl flex items-center justify-center text-xs font-bold border transition-all cursor-pointer hover:scale-105" 
+                         :class="getDayClass(day).cls" 
+                         :style="getDayClass(day).style">{{ day }}</div>
                 </div>
             </div>
         </div>
@@ -147,8 +125,12 @@
                     </div>
                 </div>
             </div>
+            
             <div class="glass p-6">
-                <h3 class="font-black text-lg mb-4 flex items-center"><i class="fas fa-trophy mr-2 text-[#b7e4c7]"></i> Monthly Totals</h3>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-black text-lg flex items-center"><i class="fas fa-trophy mr-2 text-[#b7e4c7]"></i> Monthly Totals</h3>
+                    <span class="text-xs font-bold opacity-40 uppercase">{{ browsingMonthLabel }}</span>
+                </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div v-for="h in habits" :key="h.id" class="p-3 rounded-2xl border shadow-sm" :class="isDark?'bg-white/10 border-white/5':'bg-white/60 border-white'">
                         <div class="flex items-center gap-2 mb-2"><div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] text-white" :style="{background: h.color}"><i :class="h.icon"></i></div><span class="text-xs font-bold truncate">{{ h.name }}</span></div>
@@ -186,28 +168,12 @@
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="showSettings=false"></div>
         <div class="w-full max-w-sm rounded-[32px] p-6 relative shadow-2xl scale-in" :class="isDark?'bg-[#3c3842] text-white':'bg-white text-[#5d576b]'">
             <h2 class="text-2xl font-black mb-6">Settings</h2>
-            
             <div class="space-y-6">
-                <div>
-                    <label class="text-xs font-bold opacity-40">Your Name</label>
-                    <input v-model="userName" class="w-full p-3 rounded-xl font-bold outline-none mt-1" :class="isDark?'bg-black/20':'bg-gray-50'">
-                </div>
-
-                <div class="flex items-center justify-between p-3 rounded-xl" :class="isDark?'bg-black/20':'bg-gray-50'">
-                    <span class="font-bold flex items-center gap-2"><i class="fas fa-moon"></i> Dark Mode</span>
-                    <button @click="isDark = !isDark" class="w-12 h-7 rounded-full relative transition-colors" :class="isDark?'bg-[#b7e4c7]':'bg-gray-300'">
-                        <div class="w-5 h-5 bg-white rounded-full absolute top-1 transition-all shadow-sm" :style="{left: isDark?'26px':'2px'}"></div>
-                    </button>
-                </div>
-
+                <div><label class="text-xs font-bold opacity-40">Your Name</label><input v-model="userName" class="w-full p-3 rounded-xl font-bold outline-none mt-1" :class="isDark?'bg-black/20':'bg-gray-50'"></div>
+                <div class="flex items-center justify-between p-3 rounded-xl" :class="isDark?'bg-black/20':'bg-gray-50'"><span class="font-bold flex items-center gap-2"><i class="fas fa-moon"></i> Dark Mode</span><button @click="isDark = !isDark" class="w-12 h-7 rounded-full relative transition-colors" :class="isDark?'bg-[#b7e4c7]':'bg-gray-300'"><div class="w-5 h-5 bg-white rounded-full absolute top-1 transition-all shadow-sm" :style="{left: isDark?'26px':'2px'}"></div></button></div>
                 <div class="border-t border-current opacity-20"></div>
-
                 <button @click="exportData" class="w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2" :class="isDark?'bg-white/10':'bg-[#e2d0f9]/50'"><i class="fas fa-copy"></i> Backup Data Code</button>
-                <div>
-                    <p class="text-xs font-bold opacity-40 mb-2">Restore</p>
-                    <textarea v-model="importString" class="w-full rounded-xl p-3 text-xs font-mono h-16 outline-none" :class="isDark?'bg-black/20':'bg-gray-50'"></textarea>
-                    <button @click="importData" class="w-full mt-2 py-2 border-2 border-dashed border-current opacity-50 rounded-xl font-bold text-sm">Restore</button>
-                </div>
+                <div><p class="text-xs font-bold opacity-40 mb-2">Restore</p><textarea v-model="importString" class="w-full rounded-xl p-3 text-xs font-mono h-16 outline-none" :class="isDark?'bg-black/20':'bg-gray-50'"></textarea><button @click="importData" class="w-full mt-2 py-2 border-2 border-dashed border-current opacity-50 rounded-xl font-bold text-sm">Restore</button></div>
             </div>
             <button @click="showSettings=false" class="absolute top-6 right-6 opacity-50 hover:opacity-100"><i class="fas fa-times text-xl"></i></button>
         </div>
@@ -222,10 +188,7 @@
                 <div v-for="h in habits" :key="h.id" class="rounded-2xl p-4 relative overflow-hidden" :class="isDark?'bg-white/5':'bg-gray-50'">
                     <div class="flex items-center gap-3 mb-3 relative z-10">
                         <div class="w-10 h-10 rounded-full flex items-center justify-center text-white" :style="{background: h.color}"><i :class="h.icon"></i></div>
-                        <div class="flex-1">
-                            <div class="font-bold leading-tight">{{ h.name }}</div>
-                            <div class="text-[10px] font-bold opacity-50">Goal: {{ h.target }} {{ h.unit }}</div>
-                        </div>
+                        <div class="flex-1"><div class="font-bold leading-tight">{{ h.name }}</div><div class="text-[10px] font-bold opacity-50">Goal: {{ h.target }} {{ h.unit }}</div></div>
                     </div>
                     <div class="flex items-center justify-between gap-3 h-12 rounded-xl px-1 border relative z-10" :class="isDark?'bg-black/20 border-white/10':'bg-white border-gray-200'">
                         <button @click="update(h, -1, editingDate)" class="w-10 h-full opacity-50"><i class="fas fa-minus"></i></button>
@@ -242,7 +205,7 @@
 </div>
 
 <script>
-const { createApp, ref, computed, watch, onMounted } = Vue;
+const { createApp, ref, computed, watch, onMounted, nextTick } = Vue;
 
 createApp({
     setup() {
@@ -255,11 +218,15 @@ createApp({
         const userName = ref('TszTung');
         const isDark = ref(false);
         
-        watch(view, () => { if(mainContainer.value) mainContainer.value.scrollTop = 0; });
+        // --- 1. SCROLL FIX (RELIABLE) ---
+        watch(view, async () => { await nextTick(); if(mainContainer.value) mainContainer.value.scrollTop = 0; });
 
-        // NIGHT OWL LOGIC
+        // --- 2. TIME & DATE LOGIC ---
         const getHabitDate = () => { const now = new Date(); now.setHours(now.getHours() - 2); return now; };
         const dateKey = getHabitDate().toISOString().split('T')[0];
+        
+        // Browsing Date (For Calendar Navigation)
+        const browsingDate = ref(getHabitDate());
 
         const logs = ref({ [dateKey]: {} });
         const habits = ref([
@@ -273,26 +240,19 @@ createApp({
         const colors = ['#ade8f4', '#b7e4c7', '#ffc8dd', '#e2d0f9', '#fdf0d5', '#ff9aa2', '#a0c4ff'];
         const allIcons = ['fas fa-music', 'fas fa-headphones', 'fas fa-guitar', 'fas fa-microphone', 'fas fa-tree', 'fas fa-leaf', 'fas fa-seedling', 'fas fa-sun', 'fas fa-cloud-rain', 'fas fa-basketball-ball', 'fas fa-futbol', 'fas fa-running', 'fas fa-swimmer', 'fas fa-dumbbell', 'fas fa-tint', 'fas fa-language', 'fas fa-stopwatch', 'fas fa-star', 'fas fa-book', 'fas fa-bed'];
 
-        // DYNAMIC GREETING
         const greeting = computed(() => {
             const h = new Date().getHours();
-            let g = "Hello";
-            if(h >= 2 && h < 12) g = "Good Morning";
-            else if(h >= 12 && h < 18) g = "Good Afternoon";
-            else g = "Good Night";
+            let g = "Hello"; if(h >= 2 && h < 12) g = "Good Morning"; else if(h >= 12 && h < 18) g = "Good Afternoon"; else g = "Good Night";
             return `${g}, ${userName.value}`;
         });
 
-        const triggerConfetti = () => {
-            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#b7e4c7', '#e2d0f9', '#fbc4ab'] });
-        };
+        const triggerConfetti = () => { confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#b7e4c7', '#e2d0f9', '#fbc4ab'] }); };
 
         const update = (h, val, targetDate) => {
             if(!logs.value[targetDate]) logs.value[targetDate] = {};
             const cur = logs.value[targetDate][h.id] || 0;
             const next = Math.max(0, cur + val);
             logs.value[targetDate][h.id] = next;
-            // Celebrate if just hit target
             if(targetDate === dateKey && next === h.target && val > 0) triggerConfetti();
         };
 
@@ -303,39 +263,69 @@ createApp({
             else { logs.value[targetDate][h.id] = h.target; if(targetDate === dateKey) triggerConfetti(); }
         };
 
-        // STREAK LOGIC
         const getStreak = (h) => {
             let streak = 0;
             const today = getHabitDate();
-            // Check yesterday, then day before...
             for(let i = 1; i < 365; i++) {
-                const d = new Date(today);
-                d.setDate(d.getDate() - i);
+                const d = new Date(today); d.setDate(d.getDate() - i);
                 const iso = d.toISOString().split('T')[0];
-                if((logs.value[iso]?.[h.id] || 0) >= h.target) streak++;
-                else break;
+                if((logs.value[iso]?.[h.id] || 0) >= h.target) streak++; else break;
             }
-            // Add today if done
             if((logs.value[dateKey]?.[h.id] || 0) >= h.target) streak++;
             return streak;
         };
 
-        const addHabit = () => {
-            if(newH.value.name) {
-                habits.value.push({ ...newH.value, id: Date.now() });
-                showModal.value = false;
-                newH.value = { name:'', target:1, unit:'', color:'#ade8f4', icon:'fas fa-star' };
-            }
-        };
+        const addHabit = () => { if(newH.value.name) { habits.value.push({ ...newH.value, id: Date.now() }); showModal.value = false; newH.value = { name:'', target:1, unit:'', color:'#ade8f4', icon:'fas fa-star' }; } };
         const deleteHabit = (id) => { if(confirm("Delete this habit?")) habits.value = habits.value.filter(h => h.id !== id); };
         
+        // --- 3. DYNAMIC CALENDAR LOGIC (1-12) ---
+        const changeMonth = (dir) => {
+            const d = new Date(browsingDate.value);
+            d.setMonth(d.getMonth() + dir);
+            browsingDate.value = d;
+        };
+
+        const browsingMonthLabel = computed(() => {
+            return browsingDate.value.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        });
+
+        const daysInMonth = computed(() => {
+            const y = browsingDate.value.getFullYear();
+            const m = browsingDate.value.getMonth();
+            return new Date(y, m + 1, 0).getDate();
+        });
+
+        const monthOffset = computed(() => {
+            const y = browsingDate.value.getFullYear();
+            const m = browsingDate.value.getMonth();
+            return new Date(y, m, 1).getDay(); // 0 (Sun) - 6 (Sat)
+        });
+
+        const getDayClass = (day) => {
+            const y = browsingDate.value.getFullYear();
+            const m = browsingDate.value.getMonth() + 1;
+            const dStr = `${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+            
+            // Check future
+            const today = getHabitDate();
+            const cellDate = new Date(y, m-1, day);
+            if(cellDate > today) return { cls: 'opacity-20 pointer-events-none border-transparent', style: {} };
+
+            let done = 0; habits.value.forEach(h => { if((logs.value[dStr]?.[h.id]||0) >= h.target) done++; });
+            if(done === 0) return { cls: 'bg-current opacity-5 border-transparent', style: {} };
+            if(done === habits.value.length) return { cls: 'text-white font-black', style: { background: '#b7e4c7' } };
+            return { cls: 'text-white', style: { background: '#e2d0f9' } };
+        };
+
         const editMonthDay = (day) => {
-            const todayNum = getHabitDate().getDate();
-            if(day > todayNum) return; 
-            const dStr = `2026-02-${String(day).padStart(2,'0')}`;
+            const y = browsingDate.value.getFullYear();
+            const m = browsingDate.value.getMonth() + 1;
+            const dStr = `${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+            if(new Date(y, m-1, day) > getHabitDate()) return;
             if(!logs.value[dStr]) logs.value[dStr] = {};
             editingDate.value = dStr;
         };
+
         const openEditModal = (dayData) => { if(!logs.value[dayData.date]) logs.value[dayData.date] = {}; editingDate.value = dayData.date; };
         const editingDateLabel = computed(() => editingDate.value ? new Date(editingDate.value).toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' }) : '');
 
@@ -347,16 +337,6 @@ createApp({
         const todayLabel = computed(() => getHabitDate().toLocaleDateString('en-US', { weekday:'long', month:'short', day:'numeric' }));
         const viewTitle = computed(() => { if(view.value === 'today') return "Overview"; if(view.value === 'month') return "Calendar"; return "Review"; });
         const todayProgress = computed(() => { if(!habits.value.length) return 0; let c=0; habits.value.forEach(h => { if(isDone(h, dateKey)) c++; }); return Math.round((c/habits.value.length)*100); });
-
-        const getDayClass = (day) => {
-            const dStr = `2026-02-${String(day).padStart(2,'0')}`;
-            const todayNum = getHabitDate().getDate();
-            if(day > todayNum) return { cls: 'opacity-20 pointer-events-none border-transparent', style: {} };
-            let done = 0; habits.value.forEach(h => { if((logs.value[dStr]?.[h.id]||0) >= h.target) done++; });
-            if(done === 0) return { cls: 'bg-current opacity-10 border-transparent', style: {} };
-            if(done === habits.value.length) return { cls: 'text-white font-black', style: { background: '#b7e4c7' } };
-            return { cls: 'text-white', style: { background: '#e2d0f9' } };
-        };
 
         const thisWeek = computed(() => {
             const today = getHabitDate();
@@ -373,26 +353,34 @@ createApp({
             return arr;
         });
 
-        const getMonthlyTotal = (h) => { let t=0; Object.keys(logs.value).forEach(k => { if(k.startsWith('2026-02')) t+=(logs.value[k][h.id]||0); }); return t; };
+        // 4. MONTHLY TOTALS (Based on BROWSING DATE)
+        const getMonthlyTotal = (h) => { 
+            let t=0;
+            const y = browsingDate.value.getFullYear();
+            const m = String(browsingDate.value.getMonth() + 1).padStart(2, '0');
+            const prefix = `${y}-${m}`;
+            Object.keys(logs.value).forEach(k => { if(k.startsWith(prefix)) t+=(logs.value[k][h.id]||0); }); 
+            return t; 
+        };
 
         onMounted(() => {
-            const h = localStorage.getItem('habits_v11'); if(h) habits.value = JSON.parse(h);
-            const l = localStorage.getItem('logs_v11'); if(l) logs.value = JSON.parse(l);
-            const u = localStorage.getItem('user_v11'); if(u) userName.value = u;
-            const d = localStorage.getItem('dark_v11'); if(d) isDark.value = JSON.parse(d);
+            const h = localStorage.getItem('habits_v12'); if(h) habits.value = JSON.parse(h);
+            const l = localStorage.getItem('logs_v12'); if(l) logs.value = JSON.parse(l);
+            const u = localStorage.getItem('user_v12'); if(u) userName.value = u;
+            const d = localStorage.getItem('dark_v12'); if(d) isDark.value = JSON.parse(d);
             if(!logs.value[dateKey]) logs.value[dateKey] = {};
         });
 
         watch([habits, logs, userName, isDark], () => {
-            localStorage.setItem('habits_v11', JSON.stringify(habits.value));
-            localStorage.setItem('logs_v11', JSON.stringify(logs.value));
-            localStorage.setItem('user_v11', userName.value);
-            localStorage.setItem('dark_v11', JSON.stringify(isDark.value));
+            localStorage.setItem('habits_v12', JSON.stringify(habits.value));
+            localStorage.setItem('logs_v12', JSON.stringify(logs.value));
+            localStorage.setItem('user_v12', userName.value);
+            localStorage.setItem('dark_v12', JSON.stringify(isDark.value));
         }, { deep: true });
 
         return { 
             view, habits, logs, dateKey, showModal, showSettings, editingDate, editingDateLabel, newH, colors, allIcons, importString, mainContainer, userName, isDark, greeting,
-            update, complete, addHabit, deleteHabit, exportData, importData, openEditModal, editMonthDay, getStreak,
+            update, complete, addHabit, deleteHabit, exportData, importData, openEditModal, editMonthDay, getStreak, changeMonth, browsingMonthLabel, monthOffset, daysInMonth,
             isDone, getPercent, todayLabel, todayProgress, viewTitle, getDayClass, thisWeek, getMonthlyTotal
         };
     }
