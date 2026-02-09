@@ -42,6 +42,15 @@
         @keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         .sticker-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
         .bunny-sticker { position: absolute; opacity: 0.15; transition: transform 0.5s; }
+        
+        /* NEW: Bouncing Notification Animation */
+        @keyframes bounceIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            60% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+        .animate-bounce-in { animation: bounceIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
         [v-cloak] { display: none; }
     </style>
 </head>
@@ -81,6 +90,7 @@
     <main ref="mainContainer" class="flex-1 overflow-y-auto px-5 pb-32 space-y-5 no-scrollbar relative z-10">
         
         <div v-if="view === 'today'" class="space-y-4 pt-2">
+            
             <div class="glass p-4 flex justify-between items-center">
                 <span class="text-xs font-bold opacity-40 uppercase">Mood</span>
                 <div class="flex gap-2"><button v-for="m in moods" :key="m" @click="setMood(m)" class="text-2xl transition-transform hover:scale-125 active:scale-90 opacity-50" :class="{'opacity-100 scale-125': logs[dateKey].mood === m}">{{ m }}</button></div>
@@ -182,23 +192,26 @@
 
     <button v-if="view === 'today'" @click="showModal=true" class="fixed bottom-28 right-6 w-16 h-16 bg-[#5d576b] text-white rounded-full shadow-xl flex items-center justify-center z-40 text-2xl active:scale-90 transition-transform border-4 border-white/50 backdrop-blur-sm"><i class="fas fa-plus"></i></button>
 
+    <div v-if="showNotification" class="fixed inset-0 z-[999] flex items-center justify-center pointer-events-none">
+        <div class="glass p-6 text-center animate-bounce-in shadow-2xl bg-white/95">
+            <div class="text-5xl mb-3">🎉</div>
+            <h2 class="text-2xl font-black text-[#5d576b] mb-1">{{ notificationTitle }}</h2>
+            <p class="text-sm font-bold text-[#b7e4c7] uppercase tracking-widest">{{ notificationMessage }}</p>
+        </div>
+    </div>
+
     <div v-if="showTimer" class="fixed inset-0 z-50 flex items-center justify-center p-6">
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="showTimer=false"></div>
         <div class="w-full max-w-sm rounded-[32px] p-8 relative shadow-2xl scale-in text-center glass">
             <h2 class="text-2xl font-black mb-2">Focus Timer</h2>
             <p class="text-xs font-bold opacity-40 mb-6">Earn 1 XP per second!</p>
-            
             <div v-if="!timerActive" class="flex justify-center items-center gap-2 mb-8">
                 <input v-model.number="inputMins" type="number" class="w-20 p-4 text-3xl font-black text-center rounded-2xl bg-black/5 outline-none focus:ring-2 focus:ring-[#e2d0f9]" placeholder="00">
                 <span class="text-2xl font-black opacity-30">:</span>
                 <input v-model.number="inputSecs" type="number" class="w-20 p-4 text-3xl font-black text-center rounded-2xl bg-black/5 outline-none focus:ring-2 focus:ring-[#e2d0f9]" placeholder="00">
             </div>
-
             <div v-if="timerActive" class="text-6xl font-mono font-black mb-8 text-[#5d576b] scale-110">{{ formatTime(timerSeconds) }}</div>
-
-            <button @click="toggleTimer" class="w-20 h-20 rounded-full flex items-center justify-center text-3xl text-white shadow-lg mx-auto transition-transform active:scale-90" :class="timerActive ? 'bg-[#e2d0f9]' : 'bg-[#5d576b]'">
-                <i class="fas" :class="timerActive ? 'fa-pause' : 'fa-play'"></i>
-            </button>
+            <button @click="toggleTimer" class="w-20 h-20 rounded-full flex items-center justify-center text-3xl text-white shadow-lg mx-auto transition-transform active:scale-90" :class="timerActive ? 'bg-[#e2d0f9]' : 'bg-[#5d576b]'"><i class="fas" :class="timerActive ? 'fa-pause' : 'fa-play'"></i></button>
             <button @click="showTimer=false" class="absolute top-6 right-6 opacity-50 hover:opacity-100"><i class="fas fa-times text-xl"></i></button>
         </div>
     </div>
@@ -275,6 +288,11 @@ createApp({
         const isDark = ref(false);
         const currentQuest = ref('');
         
+        // NOTIFICATION STATE
+        const showNotification = ref(false);
+        const notificationTitle = ref('');
+        const notificationMessage = ref('');
+        
         // --- RPG STATE ---
         const userLevel = ref(1);
         const userXP = ref(0);
@@ -319,6 +337,14 @@ createApp({
 
         const triggerConfetti = () => { confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#b7e4c7', '#e2d0f9', '#fbc4ab'] }); };
 
+        // --- NOTIFICATION HANDLER ---
+        const notify = (title, msg) => {
+            notificationTitle.value = title;
+            notificationMessage.value = msg;
+            showNotification.value = true;
+            setTimeout(() => showNotification.value = false, 3000);
+        };
+
         // --- SOUND ENGINE ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function beep(freq = 440, type = 'sine', len = 0.1) {
@@ -341,7 +367,7 @@ createApp({
             let bonus = 1;
             if(habit) {
                 const streak = getStreak(habit);
-                bonus = 1 + (streak * 0.1); // 10% bonus per streak day
+                bonus = 1 + (streak * 0.1); 
             }
             const earned = Math.floor(amount * bonus);
             userXP.value += earned;
@@ -351,12 +377,12 @@ createApp({
                 userLevel.value++;
                 userXP.value -= xpToNext.value;
                 xpToNext.value = Math.floor(xpToNext.value * 1.4);
-                // Level Up FX
+                
+                // NEW: Smooth Notification instead of alert
                 beep(600, 'square', 0.1); setTimeout(() => beep(800, 'square', 0.2), 150);
                 triggerConfetti();
-                alert(`LEVEL UP! You are now LVL ${userLevel.value}`);
+                notify("LEVEL UP!", `You are now Level ${userLevel.value}`);
             } else {
-                // Regular XP Sound
                 beep(880, 'sine', 0.05);
             }
         };
@@ -367,16 +393,10 @@ createApp({
             const next = Math.max(0, cur + val);
             logs.value[targetDate][h.id] = next;
             
-            // RPG: Gain XP if increasing
             if(targetDate === dateKey && val > 0) {
-                if(next === h.target) { // Hit Target
-                    triggerConfetti();
-                    gainXP(50, h); // Big bonus for completion
-                } else if (next > h.target) {
-                    gainXP(5, h); // Small bonus for surpassing
-                } else {
-                    gainXP(2, h); // Small bonus for progress
-                }
+                if(next === h.target) { triggerConfetti(); gainXP(50, h); } 
+                else if (next > h.target) { gainXP(5, h); } 
+                else { gainXP(2, h); }
             }
         };
 
@@ -411,10 +431,10 @@ createApp({
                         else { 
                             clearInterval(timerInterval); 
                             timerActive.value = false; 
-                            // TIMER REWARD
+                            // NEW: Smooth Notification
                             beep(523, 'square', 0.1); setTimeout(() => beep(659, 'square', 0.1), 150);
-                            gainXP(sessionTotal); // 1 XP per second
-                            alert(`Focus Complete! +${sessionTotal} XP`); 
+                            gainXP(sessionTotal); 
+                            notify("Focus Complete!", `You earned +${sessionTotal} XP`);
                         }
                     }, 1000);
                 }
@@ -459,8 +479,8 @@ createApp({
         const openEditModal = (dayData) => { if(!logs.value[dayData.date]) logs.value[dayData.date] = {}; editingDate.value = dayData.date; };
         const editingDateLabel = computed(() => editingDate.value ? new Date(editingDate.value).toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' }) : '');
 
-        const exportData = () => { navigator.clipboard.writeText(JSON.stringify({ h: habits.value, l: logs.value, u: userName.value, d: isDark.value, lvl: userLevel.value, xp: userXP.value, nxp: xpToNext.value })).then(() => alert("Data Code Copied!")); };
-        const importData = () => { try { const d = JSON.parse(importString.value); if(d.h && d.l) { if(confirm("Overwrite?")) { habits.value=d.h; logs.value=d.l; userName.value=d.u||'TszTung'; isDark.value=!!d.d; userLevel.value=d.lvl||1; userXP.value=d.xp||0; xpToNext.value=d.nxp||100; showSettings.value=false; } } } catch(e){ alert("Invalid"); } };
+        const exportData = () => { navigator.clipboard.writeText(JSON.stringify({ h: habits.value, l: logs.value, u: userName.value, d: isDark.value, lvl: userLevel.value, xp: userXP.value, nxp: xpToNext.value })).then(() => notify("Copied!", "Data code saved to clipboard")); };
+        const importData = () => { try { const d = JSON.parse(importString.value); if(d.h && d.l) { if(confirm("Overwrite?")) { habits.value=d.h; logs.value=d.l; userName.value=d.u||'TszTung'; isDark.value=!!d.d; userLevel.value=d.lvl||1; userXP.value=d.xp||0; xpToNext.value=d.nxp||100; showSettings.value=false; notify("Success", "Data restored"); } } } catch(e){ alert("Invalid"); } };
 
         const isDone = (h, d) => (logs.value[d]?.[h.id] || 0) >= h.target;
         const getPercent = (h, d) => ((logs.value[d]?.[h.id] || 0) / h.target) * 100;
@@ -486,24 +506,24 @@ createApp({
         });
 
         onMounted(() => {
-            const h = localStorage.getItem('habits_v16'); if(h) habits.value = JSON.parse(h);
-            const l = localStorage.getItem('logs_v16'); if(l) logs.value = JSON.parse(l);
-            const u = localStorage.getItem('user_v16'); if(u) userName.value = u;
-            const d = localStorage.getItem('dark_v16'); if(d) isDark.value = JSON.parse(d);
-            const lvl = localStorage.getItem('lvl_v16'); if(lvl) userLevel.value = JSON.parse(lvl);
-            const xp = localStorage.getItem('xp_v16'); if(xp) userXP.value = JSON.parse(xp);
-            const nxp = localStorage.getItem('nxp_v16'); if(nxp) xpToNext.value = JSON.parse(nxp);
+            const h = localStorage.getItem('habits_v17'); if(h) habits.value = JSON.parse(h);
+            const l = localStorage.getItem('logs_v17'); if(l) logs.value = JSON.parse(l);
+            const u = localStorage.getItem('user_v17'); if(u) userName.value = u;
+            const d = localStorage.getItem('dark_v17'); if(d) isDark.value = JSON.parse(d);
+            const lvl = localStorage.getItem('lvl_v17'); if(lvl) userLevel.value = JSON.parse(lvl);
+            const xp = localStorage.getItem('xp_v17'); if(xp) userXP.value = JSON.parse(xp);
+            const nxp = localStorage.getItem('nxp_v17'); if(nxp) xpToNext.value = JSON.parse(nxp);
             if(!logs.value[dateKey]) logs.value[dateKey] = {};
         });
 
         watch([habits, logs, userName, isDark, userLevel, userXP, xpToNext], () => {
-            localStorage.setItem('habits_v16', JSON.stringify(habits.value));
-            localStorage.setItem('logs_v16', JSON.stringify(logs.value));
-            localStorage.setItem('user_v16', userName.value);
-            localStorage.setItem('dark_v16', JSON.stringify(isDark.value));
-            localStorage.setItem('lvl_v16', JSON.stringify(userLevel.value));
-            localStorage.setItem('xp_v16', JSON.stringify(userXP.value));
-            localStorage.setItem('nxp_v16', JSON.stringify(xpToNext.value));
+            localStorage.setItem('habits_v17', JSON.stringify(habits.value));
+            localStorage.setItem('logs_v17', JSON.stringify(logs.value));
+            localStorage.setItem('user_v17', userName.value);
+            localStorage.setItem('dark_v17', JSON.stringify(isDark.value));
+            localStorage.setItem('lvl_v17', JSON.stringify(userLevel.value));
+            localStorage.setItem('xp_v17', JSON.stringify(userXP.value));
+            localStorage.setItem('nxp_v17', JSON.stringify(xpToNext.value));
         }, { deep: true });
 
         return { 
@@ -513,6 +533,7 @@ createApp({
             changeReviewMonth, reviewMonthLabel, getReviewMonthlyTotal, moods, setMood,
             showTimer, timerSeconds, timerActive, toggleTimer, formatTime, inputMins, inputSecs,
             currentQuest, getQuest, completeQuest, userLevel, userXP, xpToNext, xpPercent,
+            showNotification, notificationTitle, notificationMessage, notify,
             isDone, getPercent, todayLabel, todayProgress, viewTitle, getDayClass, thisWeek
         };
     }
