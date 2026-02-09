@@ -94,7 +94,7 @@
         </div>
     </div>
 
-    <main class="flex-1 overflow-y-auto px-5 pb-32 space-y-5 no-scrollbar relative z-10">
+    <main ref="mainContainer" class="flex-1 overflow-y-auto px-5 pb-32 space-y-5 no-scrollbar relative z-10 scroll-smooth">
         
         <div v-if="view === 'today'" class="space-y-4 pt-2">
             <div v-for="h in habits" :key="h.id" class="glass p-5 relative overflow-hidden transition-all active:scale-[0.99]">
@@ -122,14 +122,10 @@
         <div v-if="view === 'month'" class="space-y-6 pt-2">
             <div class="glass p-6">
                 <div class="flex justify-between items-center mb-6"><span class="font-black text-xl text-[#5d576b]">Calendar</span></div>
-                <p class="text-xs font-bold opacity-40 mb-4">Tap a date to edit past records.</p>
+                <p class="text-xs font-bold opacity-40 mb-4">Tap a date to edit records.</p>
                 <div class="grid grid-cols-7 gap-3 mb-2">
                     <div v-for="d in ['S','M','T','W','T','F','S']" class="text-center text-[10px] font-bold opacity-30">{{d}}</div>
-                    <div v-for="day in 28" :key="day" 
-                         @click="editMonthDay(day)"
-                         class="aspect-square rounded-xl flex items-center justify-center text-xs font-bold border transition-all cursor-pointer hover:scale-105" 
-                         :class="getDayClass(day).cls" 
-                         :style="getDayClass(day).style">
+                    <div v-for="day in 28" :key="day" @click="editMonthDay(day)" class="aspect-square rounded-xl flex items-center justify-center text-xs font-bold border transition-all cursor-pointer hover:scale-105" :class="getDayClass(day).cls" :style="getDayClass(day).style">
                         {{ day }}
                     </div>
                 </div>
@@ -204,12 +200,23 @@
             <div class="w-12 h-1 bg-gray-200 rounded-full mx-auto mb-6"></div>
             <div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-black text-[#5d576b]">Edit History</h2><span class="text-xs font-bold bg-gray-100 px-3 py-1 rounded-full text-gray-500">{{ editingDateLabel }}</span></div>
             <div class="space-y-4">
-                <div v-for="h in habits" :key="h.id" class="bg-gray-50 rounded-2xl p-4">
-                    <div class="flex items-center gap-3 mb-3"><div class="w-8 h-8 rounded-full flex items-center justify-center text-xs text-white" :style="{background: h.color}"><i :class="h.icon"></i></div><span class="font-bold text-[#5d576b] flex-1">{{ h.name }}</span></div>
-                    <div class="flex items-center justify-between gap-3 h-12 bg-white rounded-xl px-1 border border-gray-200">
+                <div v-for="h in habits" :key="h.id" class="bg-gray-50 rounded-2xl p-4 relative overflow-hidden">
+                    <div class="flex items-center gap-3 mb-3 relative z-10">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-white" :style="{background: h.color}"><i :class="h.icon"></i></div>
+                        <div class="flex-1">
+                            <div class="font-bold text-[#5d576b] leading-tight">{{ h.name }}</div>
+                            <div class="text-[10px] font-bold opacity-50">Goal: {{ h.target }} {{ h.unit }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between gap-3 h-12 bg-white rounded-xl px-1 border border-gray-200 relative z-10">
                         <button @click="update(h, -1, editingDate)" class="w-10 h-full text-gray-400"><i class="fas fa-minus"></i></button>
                         <input type="number" v-model.number="logs[editingDate][h.id]" class="w-full h-full text-center font-black text-xl text-[#5d576b] bg-transparent outline-none">
                         <button @click="update(h, 1, editingDate)" class="w-10 h-full text-[#5d576b]"><i class="fas fa-plus"></i></button>
+                    </div>
+
+                    <div class="absolute bottom-0 left-0 h-1.5 bg-black/5 w-full">
+                        <div class="h-full transition-all duration-500" :style="{width: Math.min(100, getPercent(h, editingDate)) + '%', background: h.color}"></div>
                     </div>
                 </div>
             </div>
@@ -229,7 +236,13 @@ createApp({
         const showSettings = ref(false);
         const editingDate = ref(null);
         const importString = ref('');
+        const mainContainer = ref(null); // Reference for Scroll Fix
         
+        // --- SCROLL FIX ---
+        watch(view, () => {
+            if(mainContainer.value) mainContainer.value.scrollTop = 0;
+        });
+
         // --- NIGHT OWL LOGIC (02:00 AM) ---
         const getHabitDate = () => {
             const now = new Date();
@@ -280,12 +293,9 @@ createApp({
             editingDate.value = dayData.date;
         };
 
-        // NEW: Edit specific day from Month View
         const editMonthDay = (day) => {
-            // Check if day is valid (not future)
             const todayNum = getHabitDate().getDate();
-            if(day > todayNum) return; // Prevent editing future days
-
+            if(day > todayNum) return; 
             const dStr = `2026-02-${String(day).padStart(2,'0')}`;
             if(!logs.value[dStr]) logs.value[dStr] = {};
             editingDate.value = dStr;
@@ -373,7 +383,7 @@ createApp({
         }, { deep: true });
 
         return { 
-            view, habits, logs, dateKey, showModal, showSettings, editingDate, editingDateLabel, newH, colors, allIcons, importString,
+            view, habits, logs, dateKey, showModal, showSettings, editingDate, editingDateLabel, newH, colors, allIcons, importString, mainContainer,
             update, complete, addHabit, deleteHabit, exportData, importData, openEditModal, editMonthDay,
             isDone, getPercent, todayLabel, todayProgress, viewTitle,
             getDayClass, thisWeek, getMonthlyTotal
