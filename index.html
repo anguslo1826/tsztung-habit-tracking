@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RPG Workout Timer</title>
+    <title>RPG Workout Timer v2</title>
     <style>
         :root {
-            --primary: #6366f1;
-            --secondary: #ec4899;
+            --primary: #8b5cf6;   /* Violet */
+            --secondary: #ec4899; /* Pink */
+            --accent: #f59e0b;    /* Amber (Gold) */
             --bg: #0f172a;
             --card: #1e293b;
             --text: #f8fafc;
@@ -23,39 +24,53 @@
             justify-content: center;
             min-height: 100vh;
             margin: 0;
+            user-select: none;
         }
 
         .container {
             background-color: var(--card);
             padding: 2rem;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            width: 350px;
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            width: 360px;
             text-align: center;
+            border: 1px solid #334155;
         }
 
-        /* Level System Styles */
+        /* --- HUD (Level & Streak) --- */
         .hud {
-            margin-bottom: 20px;
-            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 15px;
         }
 
         .level-badge {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
-            padding: 5px 10px;
-            border-radius: 8px;
+            padding: 4px 12px;
+            border-radius: 99px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+        }
+
+        .streak-badge {
+            color: var(--accent);
             font-weight: bold;
             font-size: 0.9rem;
-            display: inline-block;
-            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
+        .streak-badge.active { animation: pulse-gold 2s infinite; }
 
         .xp-bar-container {
             width: 100%;
-            height: 10px;
+            height: 8px;
             background-color: #334155;
-            border-radius: 5px;
+            border-radius: 99px;
             overflow: hidden;
+            margin-top: 10px;
         }
 
         .xp-bar-fill {
@@ -66,131 +81,181 @@
         }
 
         .xp-text {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: #94a3b8;
-            margin-top: 5px;
+            margin-top: 6px;
             display: block;
             text-align: right;
+            font-family: monospace;
         }
 
-        /* Timer Styles */
+        /* --- TIMER --- */
+        .timer-wrapper {
+            position: relative;
+            margin: 30px 0;
+        }
         .timer-display {
-            font-size: 4rem;
-            font-weight: 700;
+            font-size: 4.5rem;
+            font-weight: 800;
             font-variant-numeric: tabular-nums;
-            margin: 20px 0;
+            line-height: 1;
+            color: white;
+            text-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+        }
+        .timer-label {
+            font-size: 1rem;
             color: var(--primary);
-            text-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
 
-        /* Inputs */
+        /* --- PRESETS --- */
+        .presets {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .chip {
+            background: #334155;
+            color: #cbd5e1;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .chip:hover { background: #475569; color: white; }
+        .chip:active { transform: scale(0.95); }
+
+        /* --- INPUTS --- */
         .input-group {
             display: flex;
             gap: 10px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            background: #0f172a;
+            padding: 8px;
+            border-radius: 12px;
         }
-
         input {
-            background: #334155;
+            background: transparent;
             border: none;
             color: white;
-            padding: 10px;
-            border-radius: 8px;
-            width: 100%;
+            padding: 5px;
             font-size: 1rem;
+            font-weight: bold;
+            text-align: center;
+            width: 100%;
+            outline: none;
         }
+        input:focus { color: var(--primary); }
+        /* Remove arrows */
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
-        input:focus {
-            outline: 2px solid var(--primary);
-        }
-
-        /* Controls */
+        /* --- CONTROLS --- */
         .controls {
             display: flex;
             gap: 10px;
-            justify-content: center;
         }
-
-        button {
-            padding: 12px 24px;
+        .btn-main {
+            flex: 2;
+            background: var(--primary);
+            color: white;
             border: none;
-            border-radius: 8px;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 800;
             cursor: pointer;
+            box-shadow: 0 4px 0 #5b21b6; /* 3D effect */
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .btn-main:active { transform: translateY(4px); box-shadow: 0 0 0 #5b21b6; }
+        
+        .btn-stop { background: #ef4444; box-shadow: 0 4px 0 #991b1b; display: none; }
+        .btn-stop:active { transform: translateY(4px); box-shadow: 0 0 0 #991b1b; }
+
+        .btn-reset {
+            flex: 1;
+            background: #334155;
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
             font-weight: bold;
-            font-size: 1rem;
-            transition: transform 0.1s;
+            cursor: pointer;
         }
 
-        button:active {
-            transform: scale(0.95);
-        }
+        .message { height: 20px; margin-top: 15px; font-size: 0.85rem; color: var(--accent); font-weight: bold; }
 
-        .btn-start { background-color: var(--primary); color: white; flex: 2; }
-        .btn-stop { background-color: #ef4444; color: white; display: none;}
-        .btn-reset { background-color: #334155; color: white; flex: 1; }
-
-        .message {
-            height: 20px;
-            margin-top: 15px;
-            font-size: 0.9rem;
-            color: var(--secondary);
-        }
-
-        /* Animation */
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        .level-up-anim {
-            animation: pulse 0.5s infinite;
-            color: #fbbf24;
-        }
+        @keyframes pulse-gold { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="hud">
-        <span class="level-badge" id="levelDisplay">Level 1</span>
-        <div class="xp-bar-container">
-            <div class="xp-bar-fill" id="xpBar"></div>
+        <span class="level-badge" id="levelDisplay">LVL 1</span>
+        <div class="streak-badge active" title="Bonus XP Multiplier!">
+            <span id="streakIcon">🔥</span>
+            <span id="streakCount">0</span>
+            <span style="font-size:0.7em; opacity:0.7;">Day Streak</span>
         </div>
-        <span class="xp-text" id="xpText">0 / 100 XP</span>
+    </div>
+    
+    <div class="xp-bar-container">
+        <div class="xp-bar-fill" id="xpBar"></div>
+    </div>
+    <span class="xp-text" id="xpText">0 / 100 XP</span>
+
+    <div class="timer-wrapper">
+        <div class="timer-label" id="timerLabel">READY</div>
+        <div class="timer-display" id="timer">00:00</div>
+    </div>
+
+    <div class="presets">
+        <button class="chip" onclick="setPreset('Plank', 60)">💪 Plank 1m</button>
+        <button class="chip" onclick="setPreset('Tabata', 240)">⏱️ Tabata 4m</button>
+        <button class="chip" onclick="setPreset('Focus', 1500)">🧠 Focus 25m</button>
     </div>
 
     <div class="input-group" id="setupArea">
-        <input type="text" id="exerciseName" placeholder="Exercise (e.g. Plank)" value="Plank">
-        <input type="number" id="durationInput" placeholder="Secs" value="60" min="1">
+        <input type="text" id="exerciseName" value="Custom Workout">
+        <div style="width: 1px; background: #334155;"></div>
+        <input type="number" id="durationInput" value="60">
+        <span style="color:#64748b; padding:5px; font-size:0.8rem; display:flex; align-items:center;">s</span>
     </div>
-
-    <div class="timer-display" id="timer">01:00</div>
-    <div class="message" id="messageBox"></div>
 
     <div class="controls">
-        <button class="btn-start" id="startBtn" onclick="startTimer()">START</button>
-        <button class="btn-stop" id="stopBtn" onclick="stopTimer()">STOP</button>
+        <button class="btn-main" id="startBtn" onclick="startTimer()">START QUEST</button>
+        <button class="btn-main btn-stop" id="stopBtn" onclick="stopTimer()">GIVE UP</button>
         <button class="btn-reset" onclick="resetTimer()">RESET</button>
     </div>
+
+    <div class="message" id="messageBox"></div>
 </div>
 
 <script>
-    // --- STATE MANAGEMENT ---
+    // --- STATE ---
     let timerInterval;
     let totalTime = 60;
     let timeLeft = 60;
     let isRunning = false;
     
-    // Load from local storage or default to 0
-    let player = JSON.parse(localStorage.getItem('workoutPlayer')) || {
+    let player = JSON.parse(localStorage.getItem('rpg_player_v2')) || {
         xp: 0,
         level: 1,
-        xpToNextLevel: 100
+        xpToNext: 100,
+        streak: 0,
+        lastLog: null // stores date string "YYYY-MM-DD"
     };
 
-    // --- SOUND ENGINE ---
+    // --- SOUND ---
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function playTone(freq, type, duration) {
+    function beep(freq = 440, type = 'sine', len = 0.1) {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = type;
@@ -198,138 +263,149 @@
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         osc.start();
-        gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
-        osc.stop(audioCtx.currentTime + duration);
+        gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + len);
+        osc.stop(audioCtx.currentTime + len);
     }
 
-    // --- LEVEL SYSTEM LOGIC ---
-    function updateHUD() {
-        document.getElementById('levelDisplay').innerText = `Level ${player.level}`;
-        document.getElementById('xpText').innerText = `${Math.floor(player.xp)} / ${player.xpToNextLevel} XP`;
+    // --- LOGIC ---
+    function checkStreak() {
+        const today = new Date().toISOString().split('T')[0];
         
-        const percentage = (player.xp / player.xpToNextLevel) * 100;
-        document.getElementById('xpBar').style.width = `${percentage}%`;
-        
-        // Save progress
-        localStorage.setItem('workoutPlayer', JSON.stringify(player));
-    }
+        if (player.lastLog === today) return; // Already logged today
 
-    function addXP(amount) {
-        player.xp += amount;
-        
-        // Check for Level Up
-        if (player.xp >= player.xpToNextLevel) {
-            player.level++;
-            player.xp = player.xp - player.xpToNextLevel; // Carry over excess XP
-            player.xpToNextLevel = Math.floor(player.xpToNextLevel * 1.5); // Harder to reach next level
-            
-            playTone(600, 'square', 0.1);
-            setTimeout(() => playTone(800, 'square', 0.2), 150);
-            
-            const badge = document.getElementById('levelDisplay');
-            badge.classList.add('level-up-anim');
-            document.getElementById('messageBox').innerText = "LEVEL UP!";
-            setTimeout(() => badge.classList.remove('level-up-anim'), 2000);
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yStr = yesterday.toISOString().split('T')[0];
+
+        if (player.lastLog === yStr) {
+            player.streak++; // Continued streak
+        } else {
+            player.streak = 1; // Broken streak or new start
         }
+        player.lastLog = today;
+        saveData();
+    }
+
+    function updateHUD() {
+        document.getElementById('levelDisplay').innerText = `LVL ${player.level}`;
+        document.getElementById('xpText').innerText = `${Math.floor(player.xp)} / ${player.xpToNext} XP`;
+        document.getElementById('streakCount').innerText = player.streak;
+        
+        const pct = Math.min(100, (player.xp / player.xpToNext) * 100);
+        document.getElementById('xpBar').style.width = `${pct}%`;
+    }
+
+    function addXP(baseAmount) {
+        // Bonus Calculation: 10% bonus per streak day (capped at 100% bonus)
+        const bonusMult = 1 + (Math.min(player.streak, 10) * 0.1);
+        const finalXP = Math.floor(baseAmount * bonusMult);
+        
+        player.xp += finalXP;
+        
+        // Level Up Logic
+        if (player.xp >= player.xpToNext) {
+            player.level++;
+            player.xp -= player.xpToNext;
+            player.xpToNext = Math.floor(player.xpToNext * 1.4);
+            
+            // Level Up FX
+            beep(600, 'square', 0.1); setTimeout(() => beep(800, 'square', 0.2), 150);
+            document.getElementById('levelDisplay').style.transform = "scale(1.5)";
+            setTimeout(() => document.getElementById('levelDisplay').style.transform = "scale(1)", 500);
+            document.getElementById('messageBox').innerText = `LEVEL UP! +${finalXP} XP (x${bonusMult.toFixed(1)} Bonus)`;
+        } else {
+            document.getElementById('messageBox').innerText = `Completed! +${finalXP} XP`;
+        }
+        
+        checkStreak(); // Update streak status
+        saveData();
         updateHUD();
     }
 
-    // --- TIMER LOGIC ---
-    function formatTime(seconds) {
-        const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-        const s = (seconds % 60).toString().padStart(2, '0');
-        return `${m}:${s}`;
+    function saveData() {
+        localStorage.setItem('rpg_player_v2', JSON.stringify(player));
+    }
+
+    // --- TIMER FUNCTIONS ---
+    function formatTime(s) {
+        const m = Math.floor(s / 60).toString().padStart(2, '0');
+        const sc = (s % 60).toString().padStart(2, '0');
+        return `${m}:${sc}`;
+    }
+
+    function setPreset(name, time) {
+        if(isRunning) return;
+        document.getElementById('exerciseName').value = name;
+        document.getElementById('durationInput').value = time;
+        document.getElementById('timer').innerText = formatTime(time);
+        document.getElementById('timerLabel').innerText = name.toUpperCase();
+        timeLeft = time;
     }
 
     function startTimer() {
         if (isRunning) return;
-
-        // Get custom input values
-        const inputSecs = parseInt(document.getElementById('durationInput').value);
-        if(!inputSecs || inputSecs <= 0) return alert("Please enter valid seconds");
         
-        // Lock inputs
-        document.getElementById('setupArea').style.opacity = '0.5';
-        document.getElementById('setupArea').style.pointerEvents = 'none';
-
-        // Initialize if starting fresh
-        if (timeLeft === totalTime || timeLeft === parseInt(document.getElementById('durationInput').value)) { 
-            totalTime = inputSecs;
-            timeLeft = inputSecs;
-        }
-
+        // Input Validation
+        const val = parseInt(document.getElementById('durationInput').value);
+        if(!val || val <= 0) return;
+        
+        totalTime = val;
+        timeLeft = val;
+        
+        document.getElementById('timerLabel').innerText = document.getElementById('exerciseName').value.toUpperCase();
+        
         isRunning = true;
-        document.getElementById('startBtn').style.display = 'none';
-        document.getElementById('stopBtn').style.display = 'block';
-        document.getElementById('messageBox').innerText = `Focus: ${document.getElementById('exerciseName').value}`;
-        
-        // Start beep
-        playTone(440, 'sine', 0.1);
+        toggleControls(true);
+        beep(440, 'sine', 0.1);
 
         timerInterval = setInterval(() => {
             timeLeft--;
             document.getElementById('timer').innerText = formatTime(timeLeft);
-
-            if (timeLeft <= 0) {
-                finishTimer();
-            }
+            if (timeLeft <= 0) finishTimer();
         }, 1000);
     }
 
     function stopTimer() {
         clearInterval(timerInterval);
         isRunning = false;
-        document.getElementById('startBtn').style.display = 'block';
-        document.getElementById('stopBtn').style.display = 'none';
-        document.getElementById('startBtn').innerText = "RESUME";
+        toggleControls(false);
+        document.getElementById('timerLabel').innerText = "PAUSED";
     }
 
     function finishTimer() {
         clearInterval(timerInterval);
         isRunning = false;
+        toggleControls(false);
         
-        // Victory Sound
-        playTone(523.25, 'triangle', 0.1);
-        setTimeout(() => playTone(659.25, 'triangle', 0.1), 150);
-        setTimeout(() => playTone(783.99, 'triangle', 0.4), 300);
-
         document.getElementById('timer').innerText = "DONE";
-        document.getElementById('messageBox').innerText = `+${totalTime} XP Gained!`;
+        // Victory Fanfare
+        beep(523, 'triangle', 0.1);
+        setTimeout(() => beep(659, 'triangle', 0.1), 150);
+        setTimeout(() => beep(784, 'triangle', 0.4), 300);
         
         addXP(totalTime);
-        
-        document.getElementById('startBtn').style.display = 'block';
-        document.getElementById('stopBtn').style.display = 'none';
-        document.getElementById('startBtn').innerText = "START";
-        
-        // Unlock inputs
-        document.getElementById('setupArea').style.opacity = '1';
-        document.getElementById('setupArea').style.pointerEvents = 'auto';
-        
-        // Reset time for next round
-        timeLeft = parseInt(document.getElementById('durationInput').value);
     }
 
     function resetTimer() {
         clearInterval(timerInterval);
         isRunning = false;
-        const inputSecs = parseInt(document.getElementById('durationInput').value) || 60;
-        timeLeft = inputSecs;
-        totalTime = inputSecs;
-        
-        document.getElementById('timer').innerText = formatTime(timeLeft);
-        document.getElementById('startBtn').style.display = 'block';
-        document.getElementById('stopBtn').style.display = 'none';
-        document.getElementById('startBtn').innerText = "START";
+        toggleControls(false);
+        const val = parseInt(document.getElementById('durationInput').value) || 60;
+        document.getElementById('timer').innerText = formatTime(val);
+        document.getElementById('timerLabel').innerText = "READY";
         document.getElementById('messageBox').innerText = "";
-        
-        document.getElementById('setupArea').style.opacity = '1';
-        document.getElementById('setupArea').style.pointerEvents = 'auto';
     }
 
-    // Initialize
+    function toggleControls(active) {
+        document.getElementById('startBtn').style.display = active ? 'none' : 'block';
+        document.getElementById('stopBtn').style.display = active ? 'block' : 'none';
+        document.getElementById('setupArea').style.opacity = active ? '0.3' : '1';
+        document.getElementById('setupArea').style.pointerEvents = active ? 'none' : 'auto';
+    }
+
+    // Init
     updateHUD();
-    document.getElementById('durationInput').addEventListener('change', resetTimer);
+    resetTimer();
 </script>
 
 </body>
