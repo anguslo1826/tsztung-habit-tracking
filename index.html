@@ -2,411 +2,521 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RPG Workout Timer v2</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>TszTung's Habits RPG</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23e2d0f9'/><circle cx='35' cy='50' r='20' fill='%235d576b'/><circle cx='65' cy='60' r='15' fill='white'/><path d='M60 45 L65 60 L70 45 Z' fill='white'/><path d='M35 40 Q45 40 50 60' stroke='white' stroke-width='3' fill='none'/></svg>">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3.4.19/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@700&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --primary: #8b5cf6;   /* Violet */
-            --secondary: #ec4899; /* Pink */
-            --accent: #f59e0b;    /* Amber (Gold) */
-            --bg: #0f172a;
-            --card: #1e293b;
-            --text: #f8fafc;
+            --bg: #fdfbf7;
+            --text: #5d576b;
+            --card-bg: rgba(255,255,255,0.85);
+            --card-border: rgba(255,255,255,0.9);
+            --nav-bg: rgba(255,255,255,0.95);
+            --input-bg: rgba(255,255,255,0.5);
         }
-
-        body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            user-select: none;
+        body.dark-mode {
+            --bg: #2d2a32;
+            --text: #e2d0f9;
+            --card-bg: rgba(60, 56, 66, 0.85);
+            --card-border: rgba(255,255,255,0.1);
+            --nav-bg: rgba(45, 42, 50, 0.95);
+            --input-bg: rgba(0,0,0,0.2);
         }
-
-        .container {
-            background-color: var(--card);
-            padding: 2rem;
-            border-radius: 24px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            width: 360px;
-            text-align: center;
-            border: 1px solid #334155;
-        }
-
-        /* --- HUD (Level & Streak) --- */
-        .hud {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            margin-bottom: 15px;
-        }
-
-        .level-badge {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            padding: 4px 12px;
-            border-radius: 99px;
-            font-weight: 800;
-            font-size: 0.9rem;
-            box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
-        }
-
-        .streak-badge {
-            color: var(--accent);
-            font-weight: bold;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .streak-badge.active { animation: pulse-gold 2s infinite; }
-
-        .xp-bar-container {
-            width: 100%;
-            height: 8px;
-            background-color: #334155;
-            border-radius: 99px;
-            overflow: hidden;
-            margin-top: 10px;
-        }
-
-        .xp-bar-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-            width: 0%;
-            transition: width 0.5s ease;
-        }
-
-        .xp-text {
-            font-size: 0.75rem;
-            color: #94a3b8;
-            margin-top: 6px;
-            display: block;
-            text-align: right;
-            font-family: monospace;
-        }
-
-        /* --- TIMER --- */
-        .timer-wrapper {
-            position: relative;
-            margin: 30px 0;
-        }
-        .timer-display {
-            font-size: 4.5rem;
-            font-weight: 800;
-            font-variant-numeric: tabular-nums;
-            line-height: 1;
-            color: white;
-            text-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
-        }
-        .timer-label {
-            font-size: 1rem;
-            color: var(--primary);
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        /* --- PRESETS --- */
-        .presets {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
-        .chip {
-            background: #334155;
-            color: #cbd5e1;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .chip:hover { background: #475569; color: white; }
-        .chip:active { transform: scale(0.95); }
-
-        /* --- INPUTS --- */
-        .input-group {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            background: #0f172a;
-            padding: 8px;
-            border-radius: 12px;
-        }
-        input {
-            background: transparent;
-            border: none;
-            color: white;
-            padding: 5px;
-            font-size: 1rem;
-            font-weight: bold;
-            text-align: center;
-            width: 100%;
-            outline: none;
-        }
-        input:focus { color: var(--primary); }
-        /* Remove arrows */
-        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-
-        /* --- CONTROLS --- */
-        .controls {
-            display: flex;
-            gap: 10px;
-        }
-        .btn-main {
-            flex: 2;
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 16px;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            font-weight: 800;
-            cursor: pointer;
-            box-shadow: 0 4px 0 #5b21b6; /* 3D effect */
-            transition: transform 0.1s, box-shadow 0.1s;
-        }
-        .btn-main:active { transform: translateY(4px); box-shadow: 0 0 0 #5b21b6; }
-        
-        .btn-stop { background: #ef4444; box-shadow: 0 4px 0 #991b1b; display: none; }
-        .btn-stop:active { transform: translateY(4px); box-shadow: 0 0 0 #991b1b; }
-
-        .btn-reset {
-            flex: 1;
-            background: #334155;
-            color: white;
-            border: none;
-            padding: 16px;
-            border-radius: 12px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .message { height: 20px; margin-top: 15px; font-size: 0.85rem; color: var(--accent); font-weight: bold; }
-
-        @keyframes pulse-gold { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        body { font-family: 'Zen Maru Gothic', sans-serif; background: var(--bg); color: var(--text); height: 100dvh; width: 100vw; overflow: hidden; transition: 0.3s; -webkit-tap-highlight-color: transparent; }
+        .glass { background: var(--card-bg); backdrop-filter: blur(12px); border: 1px solid var(--card-border); border-radius: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); transition: 0.3s; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        textarea:focus, input:focus { outline: none; }
+        .slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .scale-in { animation: scaleIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        @keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .sticker-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
+        .bunny-sticker { position: absolute; opacity: 0.15; transition: transform 0.5s; }
+        [v-cloak] { display: none; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="hud">
-        <span class="level-badge" id="levelDisplay">LVL 1</span>
-        <div class="streak-badge active" title="Bonus XP Multiplier!">
-            <span id="streakIcon">🔥</span>
-            <span id="streakCount">0</span>
-            <span style="font-size:0.7em; opacity:0.7;">Day Streak</span>
+<div id="app" v-cloak class="flex flex-col h-full max-w-md mx-auto relative">
+
+    <div class="sticker-bg">
+        <svg class="bunny-sticker" style="top: 5%; left: 5%; width: 60px; transform: rotate(-15deg);" viewBox="0 0 100 100"><path d="M30 40 Q25 10 40 30 Q50 40 60 30 Q75 10 70 40 Q90 50 90 70 Q90 90 50 90 Q10 90 10 70 Q10 50 30 40" :fill="isDark?'#4a4550':'#e2d0f9'"/><circle cx="35" cy="55" r="3" :fill="isDark?'#e2d0f9':'#5d576b'"/><circle cx="65" cy="55" r="3" :fill="isDark?'#e2d0f9':'#5d576b'"/></svg>
+        <svg class="bunny-sticker" style="top: 15%; right: -10px; width: 80px; transform: rotate(20deg);" viewBox="0 0 100 100"><path d="M30 40 Q25 10 40 30 Q50 40 60 30 Q75 10 70 40 Q90 50 90 70 Q90 90 50 90 Q10 90 10 70 Q10 50 30 40" :fill="isDark?'#504545':'#fbc4ab'"/><circle cx="35" cy="55" r="3" :fill="isDark?'#e2d0f9':'#5d576b'"/><circle cx="65" cy="55" r="3" :fill="isDark?'#e2d0f9':'#5d576b'"/></svg>
+        <svg class="bunny-sticker" style="bottom: 25%; left: -20px; width: 100px; transform: rotate(-10deg);" viewBox="0 0 100 100"><path d="M30 40 Q25 10 40 30 Q50 40 60 30 Q75 10 70 40 Q90 50 90 70 Q90 90 50 90 Q10 90 10 70 Q10 50 30 40" :fill="isDark?'#3a4a40':'#b7e4c7'"/><circle cx="35" cy="55" r="3" :fill="isDark?'#e2d0f9':'#5d576b'"/><circle cx="65" cy="55" r="3" :fill="isDark?'#e2d0f9':'#5d576b'"/></svg>
+        <svg class="bunny-sticker" style="bottom: 12%; right: 10%; width: 50px; transform: rotate(45deg);" viewBox="0 0 100 100"><path d="M30 40 Q25 10 40 30 Q50 40 60 30 Q75 10 70 40 Q90 50 90 70 Q90 90 50 90 Q10 90 10 70 Q10 50 30 40" :fill="isDark?'#384852':'#99c1de'"/><circle cx="35" cy="55" r="3" :fill="isDark?'#e2d0f9':'#5d576b'"/><circle cx="65" cy="55" r="3" :fill="isDark?'#e2d0f9':'#5d576b'"/></svg>
+    </div>
+
+    <div class="pt-12 px-6 pb-4 sticky top-0 z-30 backdrop-blur-sm transition-all" style="background: var(--nav-bg);">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-black tracking-tight" style="font-family: 'Shippori Mincho', serif;">{{ greeting }}</h1>
+                <div class="mt-2 w-32 h-2 bg-gray-200/50 rounded-full overflow-hidden">
+                    <div class="h-full bg-gradient-to-r from-[#b7e4c7] to-[#e2d0f9] transition-all duration-1000" :style="{width: xpPercent + '%'}"></div>
+                </div>
+                <p class="text-[9px] font-bold opacity-60 mt-1 uppercase tracking-widest">
+                    LVL {{ userLevel }} <span class="opacity-50 mx-1">|</span> {{ Math.floor(userXP) }} / {{ xpToNext }} XP
+                </p>
+            </div>
+            <div class="flex items-center gap-3">
+                <button @click="showTimer=true" class="w-10 h-10 rounded-full border shadow-sm flex items-center justify-center active:scale-90 transition-transform" :class="isDark?'bg-white/10 border-white/20 text-white':'bg-white border-gray-100 text-[#5d576b]'"><i class="fas fa-stopwatch"></i></button>
+                <button @click="showSettings=true" class="w-10 h-10 rounded-full border shadow-sm flex items-center justify-center active:scale-90 transition-transform" :class="isDark?'bg-white/10 border-white/20 text-white':'bg-white border-gray-100 text-[#5d576b]'"><i class="fas fa-cog"></i></button>
+                <div class="w-16 h-16 rounded-full border-[6px] flex items-center justify-center relative shadow-sm" :class="isDark?'bg-[#2d2a32] border-white/10':'bg-white border-gray-100'">
+                    <span class="text-xs font-black">{{ todayProgress }}%</span>
+                    <svg class="absolute inset-0 w-full h-full -rotate-90 transform" viewBox="0 0 36 36"><path :stroke-dasharray="todayProgress + ', 100'" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#b7e4c7" stroke-width="4" stroke-linecap="round"/></svg>
+                </div>
+            </div>
         </div>
     </div>
-    
-    <div class="xp-bar-container">
-        <div class="xp-bar-fill" id="xpBar"></div>
-    </div>
-    <span class="xp-text" id="xpText">0 / 100 XP</span>
 
-    <div class="timer-wrapper">
-        <div class="timer-label" id="timerLabel">READY</div>
-        <div class="timer-display" id="timer">00:00</div>
+    <main ref="mainContainer" class="flex-1 overflow-y-auto px-5 pb-32 space-y-5 no-scrollbar relative z-10">
+        
+        <div v-if="view === 'today'" class="space-y-4 pt-2">
+            <div class="glass p-4 flex justify-between items-center">
+                <span class="text-xs font-bold opacity-40 uppercase">Mood</span>
+                <div class="flex gap-2"><button v-for="m in moods" :key="m" @click="setMood(m)" class="text-2xl transition-transform hover:scale-125 active:scale-90 opacity-50" :class="{'opacity-100 scale-125': logs[dateKey].mood === m}">{{ m }}</button></div>
+            </div>
+
+            <div v-for="h in habits" :key="h.id" class="glass p-5 relative overflow-hidden transition-all active:scale-[0.99]">
+                <div class="flex items-center gap-4 mb-5">
+                    <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-sm text-white transition-colors" :style="{background: h.color}"><i :class="h.icon"></i></div>
+                    <div class="flex-1">
+                        <div class="font-black text-lg leading-none mb-1">{{ h.name }}</div>
+                        <div class="text-xs font-bold opacity-40">Target: {{ h.target }} {{ h.unit }}</div>
+                    </div>
+                    <div v-if="getStreak(h) > 1" class="flex flex-col items-center mr-2 animate-pulse">
+                        <i class="fas fa-fire text-[#fbc4ab] text-lg drop-shadow-sm"></i><span class="text-[9px] font-black opacity-60">{{ getStreak(h) }} Days</span>
+                    </div>
+                    <button @click="deleteHabit(h.id)" class="opacity-20 hover:opacity-100 p-2"><i class="fas fa-times text-xs"></i></button>
+                </div>
+                <div class="flex items-center justify-between gap-3 relative z-10">
+                    <div class="flex-1 h-14 rounded-2xl flex items-center justify-between px-1 shadow-sm border relative" style="background: var(--input-bg); border-color: var(--card-border);">
+                        <button @click="update(h, -1, dateKey)" class="w-10 h-10 rounded-xl flex items-center justify-center active:bg-gray-100/10 transition-colors" :class="isDark?'text-white/50':'text-gray-400'"><i class="fas fa-minus"></i></button>
+                        <input type="number" v-model.number="logs[dateKey][h.id]" placeholder="0" @focus="$event.target.select()" class="w-full h-full bg-transparent text-center font-black text-2xl outline-none placeholder-gray-200" :class="isDark?'text-white':'text-[#5d576b]'">
+                        <button @click="update(h, 1, dateKey)" class="w-10 h-10 rounded-xl flex items-center justify-center active:bg-gray-100/10 transition-colors" :class="isDark?'text-white':'text-[#5d576b]'"><i class="fas fa-plus"></i></button>
+                    </div>
+                    <button @click="complete(h, dateKey)" class="w-14 h-14 rounded-2xl flex items-center justify-center shadow-md transition-all active:scale-90 border-2" :class="isDone(h, dateKey) ? 'bg-[#b7e4c7] border-[#b7e4c7] text-white scale-in' : (isDark?'bg-white/10 border-white/10 text-white/20':'bg-white border-white text-gray-200')"><i class="fas fa-check text-xl"></i></button>
+                </div>
+                <div class="absolute bottom-0 left-0 h-1.5 w-full bg-black/5"><div class="h-full transition-all duration-500 ease-out" :style="{width: Math.min(100, getPercent(h, dateKey)) + '%', background: h.color}"></div></div>
+            </div>
+
+            <div @click="getQuest" class="glass p-5 cursor-pointer hover:bg-white/50 transition-colors border-2 border-dashed border-[#e2d0f9] flex items-center justify-between group">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-[#e2d0f9] flex items-center justify-center text-white text-lg"><i class="fas fa-dice"></i></div>
+                    <div class="flex-1">
+                        <div class="font-bold text-sm" :class="currentQuest ? 'text-[#5d576b]' : 'opacity-50'">{{ currentQuest || 'Bored? Tap for a Quest!' }}</div>
+                        <div class="text-[10px] font-bold opacity-40">Reward: +20 XP</div>
+                    </div>
+                </div>
+                <i v-if="!currentQuest" class="fas fa-chevron-right opacity-30"></i>
+                <button v-if="currentQuest" @click.stop="completeQuest" class="w-8 h-8 rounded-full bg-[#b7e4c7] text-white flex items-center justify-center shadow-sm"><i class="fas fa-check"></i></button>
+            </div>
+
+            <div class="glass p-5">
+                <label class="text-xs font-bold opacity-40 uppercase mb-2 block">Daily Memo</label>
+                <textarea v-model="logs[dateKey].memo" placeholder="How was your day?" class="w-full h-24 bg-transparent resize-none text-sm font-bold leading-relaxed placeholder-current placeholder-opacity-30" :class="isDark?'text-white':'text-[#5d576b]'"></textarea>
+            </div>
+            <div class="h-12"></div>
+        </div>
+
+        <div v-if="view === 'month'" class="space-y-6 pt-2">
+            <div class="glass p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <button @click="changeMonth(-1)" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-black/5"><i class="fas fa-chevron-left"></i></button>
+                    <span class="font-black text-xl">{{ browsingMonthLabel }}</span>
+                    <button @click="changeMonth(1)" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-black/5"><i class="fas fa-chevron-right"></i></button>
+                </div>
+                <div class="grid grid-cols-7 gap-3 mb-2">
+                    <div v-for="d in ['S','M','T','W','T','F','S']" class="text-center text-[10px] font-bold opacity-30">{{d}}</div>
+                    <div v-for="n in monthOffset" class="aspect-square"></div>
+                    <div v-for="day in daysInMonth" :key="day" @click="editMonthDay(day)" class="aspect-square rounded-xl flex items-center justify-center text-xs font-bold border transition-all cursor-pointer hover:scale-105" :class="getDayClass(day).cls" :style="getDayClass(day).style">{{ day }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="view === 'review'" class="space-y-6 pt-2">
+            <div class="glass p-6">
+                <h3 class="font-black text-lg mb-2 flex items-center"><i class="fas fa-edit mr-2 text-[#e2d0f9]"></i> This Week</h3>
+                <div class="space-y-4">
+                    <div v-for="day in thisWeek" :key="day.date" @click="openEditModal(day)" class="flex items-center justify-between active:scale-95 transition-transform cursor-pointer p-2 hover:bg-white/50 rounded-xl">
+                        <div class="flex flex-col w-24"><span class="text-xs font-bold opacity-60 uppercase">{{ day.label }}</span><span v-if="day.surpassed" class="text-[9px] font-black text-[#b7e4c7] animate-pulse">🔥 SURPASS</span></div>
+                        <div class="flex-1 h-3 bg-gray-100/50 rounded-full mx-3 overflow-hidden relative"><div class="h-full bg-[#e2d0f9]" :style="{width: Math.min(100, day.percent) + '%'}"></div></div>
+                        <span class="text-xs font-black w-8 text-right">{{ day.score }}/{{ habits.length }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="glass p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-black text-lg flex items-center"><i class="fas fa-trophy mr-2 text-[#b7e4c7]"></i> Totals</h3>
+                    <div class="flex items-center gap-2 bg-black/5 rounded-full px-2 py-1">
+                        <button @click="changeReviewMonth(-1)" class="w-6 h-6 flex items-center justify-center opacity-50 hover:opacity-100"><i class="fas fa-chevron-left text-xs"></i></button>
+                        <span class="text-xs font-bold uppercase w-16 text-center">{{ reviewMonthLabel }}</span>
+                        <button @click="changeReviewMonth(1)" class="w-6 h-6 flex items-center justify-center opacity-50 hover:opacity-100"><i class="fas fa-chevron-right text-xs"></i></button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div v-for="h in habits" :key="h.id" class="p-3 rounded-2xl border shadow-sm" style="background: var(--input-bg); border-color: var(--card-border);">
+                        <div class="flex items-center gap-2 mb-2"><div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] text-white" :style="{background: h.color}"><i :class="h.icon"></i></div><span class="text-xs font-bold truncate">{{ h.name }}</span></div>
+                        <div class="text-2xl font-black">{{ getReviewMonthlyTotal(h) }} <span class="text-[10px] font-bold opacity-40 ml-1">{{ h.unit }}</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <nav class="fixed bottom-0 w-full backdrop-blur-xl border-t pb-8 pt-3 flex justify-around h-[90px] z-30" style="background: var(--nav-bg); border-color: var(--card-border);">
+        <button @click="view='today'" class="flex flex-col items-center w-16 transition-all active:scale-95" :class="(view==='today' ? (isDark?'text-white':'text-[#5d576b]') : 'text-gray-400')"><div class="text-2xl mb-1"><i class="fas fa-check-square"></i></div><span class="text-[9px] font-bold tracking-widest">TODAY</span></button>
+        <button @click="view='month'" class="flex flex-col items-center w-16 transition-all active:scale-95" :class="(view==='month' ? (isDark?'text-white':'text-[#5d576b]') : 'text-gray-400')"><div class="text-2xl mb-1"><i class="fas fa-calendar-alt"></i></div><span class="text-[9px] font-bold tracking-widest">MONTH</span></button>
+        <button @click="view='review'" class="flex flex-col items-center w-16 transition-all active:scale-95" :class="(view==='review' ? (isDark?'text-white':'text-[#5d576b]') : 'text-gray-400')"><div class="text-2xl mb-1"><i class="fas fa-chart-pie"></i></div><span class="text-[9px] font-bold tracking-widest">REVIEW</span></button>
+    </nav>
+
+    <button v-if="view === 'today'" @click="showModal=true" class="fixed bottom-28 right-6 w-16 h-16 bg-[#5d576b] text-white rounded-full shadow-xl flex items-center justify-center z-40 text-2xl active:scale-90 transition-transform border-4 border-white/50 backdrop-blur-sm"><i class="fas fa-plus"></i></button>
+
+    <div v-if="showTimer" class="fixed inset-0 z-50 flex items-center justify-center p-6">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="showTimer=false"></div>
+        <div class="w-full max-w-sm rounded-[32px] p-8 relative shadow-2xl scale-in text-center glass">
+            <h2 class="text-2xl font-black mb-2">Focus Timer</h2>
+            <p class="text-xs font-bold opacity-40 mb-6">Earn 1 XP per second!</p>
+            
+            <div v-if="!timerActive" class="flex justify-center items-center gap-2 mb-8">
+                <input v-model.number="inputMins" type="number" class="w-20 p-4 text-3xl font-black text-center rounded-2xl bg-black/5 outline-none focus:ring-2 focus:ring-[#e2d0f9]" placeholder="00">
+                <span class="text-2xl font-black opacity-30">:</span>
+                <input v-model.number="inputSecs" type="number" class="w-20 p-4 text-3xl font-black text-center rounded-2xl bg-black/5 outline-none focus:ring-2 focus:ring-[#e2d0f9]" placeholder="00">
+            </div>
+
+            <div v-if="timerActive" class="text-6xl font-mono font-black mb-8 text-[#5d576b] scale-110">{{ formatTime(timerSeconds) }}</div>
+
+            <button @click="toggleTimer" class="w-20 h-20 rounded-full flex items-center justify-center text-3xl text-white shadow-lg mx-auto transition-transform active:scale-90" :class="timerActive ? 'bg-[#e2d0f9]' : 'bg-[#5d576b]'">
+                <i class="fas" :class="timerActive ? 'fa-pause' : 'fa-play'"></i>
+            </button>
+            <button @click="showTimer=false" class="absolute top-6 right-6 opacity-50 hover:opacity-100"><i class="fas fa-times text-xl"></i></button>
+        </div>
     </div>
 
-    <div class="presets">
-        <button class="chip" onclick="setPreset('Plank', 60)">💪 Plank 1m</button>
-        <button class="chip" onclick="setPreset('Tabata', 240)">⏱️ Tabata 4m</button>
-        <button class="chip" onclick="setPreset('Focus', 1500)">🧠 Focus 25m</button>
+    <div v-if="showModal" class="fixed inset-0 z-50 flex items-end justify-center">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="showModal=false"></div>
+        <div class="w-full max-w-md rounded-t-[32px] p-8 slide-up relative shadow-2xl pb-12 glass">
+            <div class="w-12 h-1 rounded-full mx-auto mb-6 bg-current opacity-20"></div>
+            <h2 class="text-2xl font-black mb-6">Create Habit</h2>
+            <div class="space-y-5">
+                <div><label class="text-xs font-bold opacity-40">Name</label><input v-model="newH.name" placeholder="e.g. Read Book" class="w-full p-4 rounded-2xl font-bold text-lg outline-none" style="background: var(--input-bg);"></div>
+                <div class="flex gap-4"><div class="w-1/3"><label class="text-xs font-bold opacity-40">Target</label><input v-model.number="newH.target" type="number" class="w-full p-4 rounded-2xl font-bold text-lg text-center outline-none" style="background: var(--input-bg);"></div><div class="flex-1"><label class="text-xs font-bold opacity-40">Unit</label><input v-model="newH.unit" placeholder="mins" class="w-full p-4 rounded-2xl font-bold text-lg outline-none" style="background: var(--input-bg);"></div></div>
+                <div><label class="text-xs font-bold opacity-40 block mb-2">Color</label><div class="flex gap-3 overflow-x-auto no-scrollbar py-1"><div v-for="c in colors" :key="c" @click="newH.color=c" class="w-12 h-12 rounded-full cursor-pointer border-4 transition-transform hover:scale-110 shadow-sm flex-shrink-0" :style="{background:c, borderColor: newH.color===c?'currentColor':'transparent'}"></div></div></div>
+                <div><label class="text-xs font-bold opacity-40 block mb-2">Icon</label><div class="flex gap-3 overflow-x-auto no-scrollbar py-1"><div v-for="icon in allIcons" :key="icon" @click="newH.icon=icon" class="w-12 h-12 rounded-2xl cursor-pointer border-2 flex items-center justify-center flex-shrink-0" :style="{borderColor: newH.icon===icon?'currentColor':'transparent'}"><i :class="icon" class="text-xl"></i></div></div></div>
+            </div>
+            <button @click="addHabit" class="w-full mt-8 py-4 rounded-2xl font-bold text-lg shadow-lg bg-[#5d576b] text-white">Save Habit</button>
+        </div>
     </div>
 
-    <div class="input-group" id="setupArea">
-        <input type="text" id="exerciseName" value="Custom Workout">
-        <div style="width: 1px; background: #334155;"></div>
-        <input type="number" id="durationInput" value="60">
-        <span style="color:#64748b; padding:5px; font-size:0.8rem; display:flex; align-items:center;">s</span>
+    <div v-if="showSettings" class="fixed inset-0 z-50 flex items-center justify-center p-6">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="showSettings=false"></div>
+        <div class="w-full max-w-sm rounded-[32px] p-6 relative shadow-2xl scale-in glass">
+            <h2 class="text-2xl font-black mb-6">Settings</h2>
+            <div class="space-y-6">
+                <div><label class="text-xs font-bold opacity-40">Your Name</label><input v-model="userName" class="w-full p-3 rounded-xl font-bold outline-none mt-1" style="background: var(--input-bg);"></div>
+                <div class="flex items-center justify-between p-3 rounded-xl" style="background: var(--input-bg);"><span class="font-bold flex items-center gap-2"><i class="fas fa-moon"></i> Dark Mode</span><button @click="isDark = !isDark" class="w-12 h-7 rounded-full relative transition-colors" :class="isDark?'bg-[#b7e4c7]':'bg-gray-300'"><div class="w-5 h-5 bg-white rounded-full absolute top-1 transition-all shadow-sm" :style="{left: isDark?'26px':'2px'}"></div></button></div>
+                <div class="border-t border-current opacity-20"></div>
+                <button @click="exportData" class="w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2" :class="isDark?'bg-white/10':'bg-[#e2d0f9]/50'"><i class="fas fa-copy"></i> Backup Data Code</button>
+                <div><p class="text-xs font-bold opacity-40 mb-2">Restore</p><textarea v-model="importString" class="w-full rounded-xl p-3 text-xs font-mono h-16 outline-none" style="background: var(--input-bg);"></textarea><button @click="importData" class="w-full mt-2 py-2 border-2 border-dashed border-current opacity-50 rounded-xl font-bold text-sm">Restore</button></div>
+            </div>
+            <button @click="showSettings=false" class="absolute top-6 right-6 opacity-50 hover:opacity-100"><i class="fas fa-times text-xl"></i></button>
+        </div>
     </div>
 
-    <div class="controls">
-        <button class="btn-main" id="startBtn" onclick="startTimer()">START QUEST</button>
-        <button class="btn-main btn-stop" id="stopBtn" onclick="stopTimer()">GIVE UP</button>
-        <button class="btn-reset" onclick="resetTimer()">RESET</button>
+    <div v-if="editingDate" class="fixed inset-0 z-50 flex items-end justify-center">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="editingDate=null"></div>
+        <div class="w-full max-w-md rounded-t-[32px] p-6 slide-up relative shadow-2xl pb-12 max-h-[85vh] overflow-y-auto glass">
+            <div class="w-12 h-1 rounded-full mx-auto mb-6 bg-current opacity-20"></div>
+            <div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-black">Edit History</h2><span class="text-xs font-bold px-3 py-1 rounded-full bg-current bg-opacity-10">{{ editingDateLabel }}</span></div>
+            <div class="p-4 rounded-2xl mb-4 bg-black/5"><span class="text-xs font-bold opacity-40 uppercase block mb-2">Mood</span><div class="flex gap-2"><button v-for="m in moods" :key="m" @click="logs[editingDate].mood = m" class="text-xl opacity-50" :class="{'opacity-100 scale-125': logs[editingDate].mood === m}">{{ m }}</button></div></div>
+            <div class="space-y-4">
+                <div v-for="h in habits" :key="h.id" class="rounded-2xl p-4 relative overflow-hidden" style="background: var(--input-bg);">
+                    <div class="flex items-center gap-3 mb-3 relative z-10">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-white" :style="{background: h.color}"><i :class="h.icon"></i></div>
+                        <div class="flex-1"><div class="font-bold leading-tight">{{ h.name }}</div><div class="text-[10px] font-bold opacity-50">Goal: {{ h.target }} {{ h.unit }}</div></div>
+                    </div>
+                    <div class="flex items-center justify-between gap-3 h-12 rounded-xl px-1 border relative z-10" :class="isDark?'bg-black/20 border-white/10':'bg-white border-gray-200'">
+                        <button @click="update(h, -1, editingDate)" class="w-10 h-full opacity-50"><i class="fas fa-minus"></i></button>
+                        <input type="number" v-model.number="logs[editingDate][h.id]" class="w-full h-full text-center font-black text-xl bg-transparent outline-none">
+                        <button @click="update(h, 1, editingDate)" class="w-10 h-full"><i class="fas fa-plus"></i></button>
+                    </div>
+                    <div class="absolute bottom-0 left-0 h-1.5 w-full bg-black/5"><div class="h-full transition-all duration-500" :style="{width: Math.min(100, getPercent(h, editingDate)) + '%', background: h.color}"></div></div>
+                </div>
+            </div>
+            <button @click="editingDate=null" class="w-full mt-6 py-4 bg-[#5d576b] text-white rounded-2xl font-bold shadow-lg">Done</button>
+        </div>
     </div>
 
-    <div class="message" id="messageBox"></div>
 </div>
 
 <script>
-    // --- STATE ---
-    let timerInterval;
-    let totalTime = 60;
-    let timeLeft = 60;
-    let isRunning = false;
-    
-    let player = JSON.parse(localStorage.getItem('rpg_player_v2')) || {
-        xp: 0,
-        level: 1,
-        xpToNext: 100,
-        streak: 0,
-        lastLog: null // stores date string "YYYY-MM-DD"
-    };
+const { createApp, ref, computed, watch, onMounted, nextTick } = Vue;
 
-    // --- SOUND ---
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function beep(freq = 440, type = 'sine', len = 0.1) {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = type;
-        osc.frequency.value = freq;
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + len);
-        osc.stop(audioCtx.currentTime + len);
-    }
-
-    // --- LOGIC ---
-    function checkStreak() {
-        const today = new Date().toISOString().split('T')[0];
+createApp({
+    setup() {
+        const view = ref('today');
+        const showModal = ref(false);
+        const showSettings = ref(false);
+        const showTimer = ref(false);
+        const editingDate = ref(null);
+        const importString = ref('');
+        const mainContainer = ref(null);
+        const userName = ref('TszTung');
+        const isDark = ref(false);
+        const currentQuest = ref('');
         
-        if (player.lastLog === today) return; // Already logged today
+        // --- RPG STATE ---
+        const userLevel = ref(1);
+        const userXP = ref(0);
+        const xpToNext = ref(100);
+        
+        const moods = ['😭', '☹️', '😐', '🙂', '🤩'];
+        const quests = ["Drink a glass of water", "Do 5 deep breaths", "Stretch your neck", "Compliment yourself", "Text a friend", "Stand up for 1 min", "Clean one small thing"];
 
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        const yStr = yesterday.toISOString().split('T')[0];
+        // TIMER STATE
+        const inputMins = ref(10);
+        const inputSecs = ref(0);
+        const timerSeconds = ref(600);
+        const timerActive = ref(false);
+        let timerInterval = null;
 
-        if (player.lastLog === yStr) {
-            player.streak++; // Continued streak
-        } else {
-            player.streak = 1; // Broken streak or new start
+        watch(view, async () => { await nextTick(); if(mainContainer.value) mainContainer.value.scrollTo({ top: 0, behavior: 'auto' }); });
+        watch(isDark, (val) => { document.body.classList.toggle('dark-mode', val); }, { immediate: true });
+
+        const getHabitDate = () => { const now = new Date(); now.setHours(now.getHours() - 2); return now; };
+        const dateKey = getHabitDate().toISOString().split('T')[0];
+        
+        const browsingDate = ref(getHabitDate());
+        const reviewDate = ref(getHabitDate());
+
+        const logs = ref({ [dateKey]: {} });
+        const habits = ref([
+            { id: 1, name: "Drink Water", target: 5, unit: "bottles", color: "#ade8f4", icon: "fas fa-tint" },
+            { id: 2, name: "Duolingo", target: 1, unit: "session", color: "#b7e4c7", icon: "fas fa-language" },
+            { id: 3, name: "Plank 1min", target: 3, unit: "sets", color: "#ffc8dd", icon: "fas fa-stopwatch" },
+            { id: 4, name: "Knee Lift", target: 100, unit: "reps", color: "#e2d0f9", icon: "fas fa-running" }
+        ]);
+        
+        const newH = ref({ name:'', target:1, unit:'', color:'#ade8f4', icon:'fas fa-star' });
+        const colors = ['#ade8f4', '#b7e4c7', '#ffc8dd', '#e2d0f9', '#fdf0d5', '#ff9aa2', '#a0c4ff'];
+        const allIcons = ['fas fa-music', 'fas fa-headphones', 'fas fa-guitar', 'fas fa-microphone', 'fas fa-tree', 'fas fa-leaf', 'fas fa-seedling', 'fas fa-sun', 'fas fa-cloud-rain', 'fas fa-basketball-ball', 'fas fa-futbol', 'fas fa-running', 'fas fa-swimmer', 'fas fa-dumbbell', 'fas fa-tint', 'fas fa-language', 'fas fa-stopwatch', 'fas fa-star', 'fas fa-book', 'fas fa-bed'];
+
+        const greeting = computed(() => {
+            const h = new Date().getHours();
+            let g = "Hello"; if(h >= 2 && h < 12) g = "Good Morning"; else if(h >= 12 && h < 18) g = "Good Afternoon"; else g = "Good Night";
+            return `${g}, ${userName.value}`;
+        });
+
+        const triggerConfetti = () => { confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#b7e4c7', '#e2d0f9', '#fbc4ab'] }); };
+
+        // --- SOUND ENGINE ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function beep(freq = 440, type = 'sine', len = 0.1) {
+            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+            osc.type = type; osc.frequency.value = freq; osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + len); osc.stop(audioCtx.currentTime + len);
         }
-        player.lastLog = today;
-        saveData();
-    }
 
-    function updateHUD() {
-        document.getElementById('levelDisplay').innerText = `LVL ${player.level}`;
-        document.getElementById('xpText').innerText = `${Math.floor(player.xp)} / ${player.xpToNext} XP`;
-        document.getElementById('streakCount').innerText = player.streak;
-        
-        const pct = Math.min(100, (player.xp / player.xpToNext) * 100);
-        document.getElementById('xpBar').style.width = `${pct}%`;
-    }
+        // --- RPG ENGINE ---
+        const getStreak = (h) => {
+            let streak = 0; const today = getHabitDate();
+            for(let i = 1; i < 365; i++) {
+                const d = new Date(today); d.setDate(d.getDate() - i); const iso = d.toISOString().split('T')[0];
+                if((logs.value[iso]?.[h.id] || 0) >= h.target) streak++; else break;
+            }
+            if((logs.value[dateKey]?.[h.id] || 0) >= h.target) streak++; return streak;
+        };
 
-    function addXP(baseAmount) {
-        // Bonus Calculation: 10% bonus per streak day (capped at 100% bonus)
-        const bonusMult = 1 + (Math.min(player.streak, 10) * 0.1);
-        const finalXP = Math.floor(baseAmount * bonusMult);
-        
-        player.xp += finalXP;
-        
-        // Level Up Logic
-        if (player.xp >= player.xpToNext) {
-            player.level++;
-            player.xp -= player.xpToNext;
-            player.xpToNext = Math.floor(player.xpToNext * 1.4);
+        const gainXP = (amount, habit = null) => {
+            let bonus = 1;
+            if(habit) {
+                const streak = getStreak(habit);
+                bonus = 1 + (streak * 0.1); // 10% bonus per streak day
+            }
+            const earned = Math.floor(amount * bonus);
+            userXP.value += earned;
             
-            // Level Up FX
-            beep(600, 'square', 0.1); setTimeout(() => beep(800, 'square', 0.2), 150);
-            document.getElementById('levelDisplay').style.transform = "scale(1.5)";
-            setTimeout(() => document.getElementById('levelDisplay').style.transform = "scale(1)", 500);
-            document.getElementById('messageBox').innerText = `LEVEL UP! +${finalXP} XP (x${bonusMult.toFixed(1)} Bonus)`;
-        } else {
-            document.getElementById('messageBox').innerText = `Completed! +${finalXP} XP`;
-        }
+            // Level Up
+            if(userXP.value >= xpToNext.value) {
+                userLevel.value++;
+                userXP.value -= xpToNext.value;
+                xpToNext.value = Math.floor(xpToNext.value * 1.4);
+                // Level Up FX
+                beep(600, 'square', 0.1); setTimeout(() => beep(800, 'square', 0.2), 150);
+                triggerConfetti();
+                alert(`LEVEL UP! You are now LVL ${userLevel.value}`);
+            } else {
+                // Regular XP Sound
+                beep(880, 'sine', 0.05);
+            }
+        };
+
+        const update = (h, val, targetDate) => {
+            if(!logs.value[targetDate]) logs.value[targetDate] = {};
+            const cur = logs.value[targetDate][h.id] || 0;
+            const next = Math.max(0, cur + val);
+            logs.value[targetDate][h.id] = next;
+            
+            // RPG: Gain XP if increasing
+            if(targetDate === dateKey && val > 0) {
+                if(next === h.target) { // Hit Target
+                    triggerConfetti();
+                    gainXP(50, h); // Big bonus for completion
+                } else if (next > h.target) {
+                    gainXP(5, h); // Small bonus for surpassing
+                } else {
+                    gainXP(2, h); // Small bonus for progress
+                }
+            }
+        };
+
+        const complete = (h, targetDate) => {
+            if(!logs.value[targetDate]) logs.value[targetDate] = {};
+            const cur = logs.value[targetDate][h.id] || 0;
+            if (cur >= h.target) logs.value[targetDate][h.id] = 0;
+            else { 
+                logs.value[targetDate][h.id] = h.target; 
+                if(targetDate === dateKey) { triggerConfetti(); gainXP(50, h); }
+            }
+        };
+
+        const setMood = (m) => { if(!logs.value[dateKey]) logs.value[dateKey] = {}; logs.value[dateKey].mood = m; };
+
+        // MYSTERY QUEST
+        const getQuest = () => { if(!currentQuest.value) currentQuest.value = quests[Math.floor(Math.random() * quests.length)]; };
+        const completeQuest = () => { currentQuest.value = ''; triggerConfetti(); gainXP(20); };
+
+        // TIMER LOGIC
+        const formatTime = (s) => { const m = Math.floor(s/60).toString().padStart(2,'0'); const sec = (s%60).toString().padStart(2,'0'); return `${m}:${sec}`; };
+        const toggleTimer = () => {
+            if(timerActive.value) { clearInterval(timerInterval); timerActive.value = false; }
+            else {
+                if(inputMins.value > 0 || inputSecs.value > 0) {
+                    timerSeconds.value = (inputMins.value * 60) + inputSecs.value;
+                    const sessionTotal = timerSeconds.value;
+                    timerActive.value = true;
+                    beep(440, 'triangle', 0.1);
+                    timerInterval = setInterval(() => {
+                        if(timerSeconds.value > 0) timerSeconds.value--;
+                        else { 
+                            clearInterval(timerInterval); 
+                            timerActive.value = false; 
+                            // TIMER REWARD
+                            beep(523, 'square', 0.1); setTimeout(() => beep(659, 'square', 0.1), 150);
+                            gainXP(sessionTotal); // 1 XP per second
+                            alert(`Focus Complete! +${sessionTotal} XP`); 
+                        }
+                    }, 1000);
+                }
+            }
+        };
+
+        const addHabit = () => { if(newH.value.name) { habits.value.push({ ...newH.value, id: Date.now() }); showModal.value = false; newH.value = { name:'', target:1, unit:'', color:'#ade8f4', icon:'fas fa-star' }; } };
+        const deleteHabit = (id) => { if(confirm("Delete this habit?")) habits.value = habits.value.filter(h => h.id !== id); };
         
-        checkStreak(); // Update streak status
-        saveData();
-        updateHUD();
-    }
+        const changeMonth = (dir) => { const d = new Date(browsingDate.value); d.setMonth(d.getMonth() + dir); browsingDate.value = d; };
+        const browsingMonthLabel = computed(() => browsingDate.value.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }));
+        const daysInMonth = computed(() => { const y = browsingDate.value.getFullYear(); const m = browsingDate.value.getMonth(); return new Date(y, m + 1, 0).getDate(); });
+        const monthOffset = computed(() => { const y = browsingDate.value.getFullYear(); const m = browsingDate.value.getMonth(); return new Date(y, m, 1).getDay(); });
 
-    function saveData() {
-        localStorage.setItem('rpg_player_v2', JSON.stringify(player));
-    }
+        const getDayClass = (day) => {
+            const y = browsingDate.value.getFullYear(); const m = browsingDate.value.getMonth() + 1;
+            const dStr = `${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+            const today = getHabitDate();
+            if(new Date(y, m-1, day) > today) return { cls: 'opacity-20 pointer-events-none border-transparent', style: {} };
+            let done = 0; habits.value.forEach(h => { if((logs.value[dStr]?.[h.id]||0) >= h.target) done++; });
+            if(done === 0) return { cls: 'bg-current opacity-5 border-transparent', style: {} };
+            if(done === habits.value.length) return { cls: 'text-white font-black', style: { background: '#b7e4c7' } };
+            return { cls: 'text-white', style: { background: '#e2d0f9' } };
+        };
 
-    // --- TIMER FUNCTIONS ---
-    function formatTime(s) {
-        const m = Math.floor(s / 60).toString().padStart(2, '0');
-        const sc = (s % 60).toString().padStart(2, '0');
-        return `${m}:${sc}`;
-    }
+        const editMonthDay = (day) => {
+            const y = browsingDate.value.getFullYear(); const m = browsingDate.value.getMonth() + 1;
+            const dStr = `${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+            if(new Date(y, m-1, day) > getHabitDate()) return;
+            if(!logs.value[dStr]) logs.value[dStr] = {};
+            editingDate.value = dStr;
+        };
 
-    function setPreset(name, time) {
-        if(isRunning) return;
-        document.getElementById('exerciseName').value = name;
-        document.getElementById('durationInput').value = time;
-        document.getElementById('timer').innerText = formatTime(time);
-        document.getElementById('timerLabel').innerText = name.toUpperCase();
-        timeLeft = time;
-    }
-
-    function startTimer() {
-        if (isRunning) return;
+        const changeReviewMonth = (dir) => { const d = new Date(reviewDate.value); d.setMonth(d.getMonth() + dir); reviewDate.value = d; };
+        const reviewMonthLabel = computed(() => reviewDate.value.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }));
         
-        // Input Validation
-        const val = parseInt(document.getElementById('durationInput').value);
-        if(!val || val <= 0) return;
+        const getReviewMonthlyTotal = (h) => { 
+            let t=0; const y = reviewDate.value.getFullYear(); const m = String(reviewDate.value.getMonth() + 1).padStart(2, '0'); const prefix = `${y}-${m}`;
+            Object.keys(logs.value).forEach(k => { if(k.startsWith(prefix)) t+=(logs.value[k][h.id]||0); }); return t; 
+        };
+
+        const openEditModal = (dayData) => { if(!logs.value[dayData.date]) logs.value[dayData.date] = {}; editingDate.value = dayData.date; };
+        const editingDateLabel = computed(() => editingDate.value ? new Date(editingDate.value).toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' }) : '');
+
+        const exportData = () => { navigator.clipboard.writeText(JSON.stringify({ h: habits.value, l: logs.value, u: userName.value, d: isDark.value, lvl: userLevel.value, xp: userXP.value, nxp: xpToNext.value })).then(() => alert("Data Code Copied!")); };
+        const importData = () => { try { const d = JSON.parse(importString.value); if(d.h && d.l) { if(confirm("Overwrite?")) { habits.value=d.h; logs.value=d.l; userName.value=d.u||'TszTung'; isDark.value=!!d.d; userLevel.value=d.lvl||1; userXP.value=d.xp||0; xpToNext.value=d.nxp||100; showSettings.value=false; } } } catch(e){ alert("Invalid"); } };
+
+        const isDone = (h, d) => (logs.value[d]?.[h.id] || 0) >= h.target;
+        const getPercent = (h, d) => ((logs.value[d]?.[h.id] || 0) / h.target) * 100;
+        const todayLabel = computed(() => getHabitDate().toLocaleDateString('en-US', { weekday:'long', month:'short', day:'numeric' }));
+        const viewTitle = computed(() => { if(view.value === 'today') return "Overview"; if(view.value === 'month') return "Calendar"; return "Review"; });
+        const todayProgress = computed(() => { if(!habits.value.length) return 0; let c=0; habits.value.forEach(h => { if(isDone(h, dateKey)) c++; }); return Math.round((c/habits.value.length)*100); });
         
-        totalTime = val;
-        timeLeft = val;
-        
-        document.getElementById('timerLabel').innerText = document.getElementById('exerciseName').value.toUpperCase();
-        
-        isRunning = true;
-        toggleControls(true);
-        beep(440, 'sine', 0.1);
+        const xpPercent = computed(() => Math.min(100, (userXP.value / xpToNext.value) * 100));
 
-        timerInterval = setInterval(() => {
-            timeLeft--;
-            document.getElementById('timer').innerText = formatTime(timeLeft);
-            if (timeLeft <= 0) finishTimer();
-        }, 1000);
+        const thisWeek = computed(() => {
+            const today = getHabitDate();
+            const diff = today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1);
+            const monday = new Date(today.setDate(diff));
+            const arr = [];
+            for(let i=0; i<7; i++) {
+                const d = new Date(monday); d.setDate(monday.getDate()+i);
+                const iso = d.toISOString().split('T')[0];
+                let s=0, pass=false;
+                habits.value.forEach(h => { const v=logs.value[iso]?.[h.id]||0; if(v>=h.target) s++; if(v>h.target) pass=true; });
+                arr.push({ date: iso, label: d.toLocaleDateString('en-US', {weekday:'short'}), score: s, percent: (s/habits.value.length)*100, surpassed: pass });
+            }
+            return arr;
+        });
+
+        onMounted(() => {
+            const h = localStorage.getItem('habits_v16'); if(h) habits.value = JSON.parse(h);
+            const l = localStorage.getItem('logs_v16'); if(l) logs.value = JSON.parse(l);
+            const u = localStorage.getItem('user_v16'); if(u) userName.value = u;
+            const d = localStorage.getItem('dark_v16'); if(d) isDark.value = JSON.parse(d);
+            const lvl = localStorage.getItem('lvl_v16'); if(lvl) userLevel.value = JSON.parse(lvl);
+            const xp = localStorage.getItem('xp_v16'); if(xp) userXP.value = JSON.parse(xp);
+            const nxp = localStorage.getItem('nxp_v16'); if(nxp) xpToNext.value = JSON.parse(nxp);
+            if(!logs.value[dateKey]) logs.value[dateKey] = {};
+        });
+
+        watch([habits, logs, userName, isDark, userLevel, userXP, xpToNext], () => {
+            localStorage.setItem('habits_v16', JSON.stringify(habits.value));
+            localStorage.setItem('logs_v16', JSON.stringify(logs.value));
+            localStorage.setItem('user_v16', userName.value);
+            localStorage.setItem('dark_v16', JSON.stringify(isDark.value));
+            localStorage.setItem('lvl_v16', JSON.stringify(userLevel.value));
+            localStorage.setItem('xp_v16', JSON.stringify(userXP.value));
+            localStorage.setItem('nxp_v16', JSON.stringify(xpToNext.value));
+        }, { deep: true });
+
+        return { 
+            view, habits, logs, dateKey, showModal, showSettings, editingDate, editingDateLabel, newH, colors, allIcons, importString, mainContainer, userName, isDark, greeting,
+            update, complete, addHabit, deleteHabit, exportData, importData, openEditModal, editMonthDay, getStreak, 
+            changeMonth, browsingMonthLabel, monthOffset, daysInMonth,
+            changeReviewMonth, reviewMonthLabel, getReviewMonthlyTotal, moods, setMood,
+            showTimer, timerSeconds, timerActive, toggleTimer, formatTime, inputMins, inputSecs,
+            currentQuest, getQuest, completeQuest, userLevel, userXP, xpToNext, xpPercent,
+            isDone, getPercent, todayLabel, todayProgress, viewTitle, getDayClass, thisWeek
+        };
     }
-
-    function stopTimer() {
-        clearInterval(timerInterval);
-        isRunning = false;
-        toggleControls(false);
-        document.getElementById('timerLabel').innerText = "PAUSED";
-    }
-
-    function finishTimer() {
-        clearInterval(timerInterval);
-        isRunning = false;
-        toggleControls(false);
-        
-        document.getElementById('timer').innerText = "DONE";
-        // Victory Fanfare
-        beep(523, 'triangle', 0.1);
-        setTimeout(() => beep(659, 'triangle', 0.1), 150);
-        setTimeout(() => beep(784, 'triangle', 0.4), 300);
-        
-        addXP(totalTime);
-    }
-
-    function resetTimer() {
-        clearInterval(timerInterval);
-        isRunning = false;
-        toggleControls(false);
-        const val = parseInt(document.getElementById('durationInput').value) || 60;
-        document.getElementById('timer').innerText = formatTime(val);
-        document.getElementById('timerLabel').innerText = "READY";
-        document.getElementById('messageBox').innerText = "";
-    }
-
-    function toggleControls(active) {
-        document.getElementById('startBtn').style.display = active ? 'none' : 'block';
-        document.getElementById('stopBtn').style.display = active ? 'block' : 'none';
-        document.getElementById('setupArea').style.opacity = active ? '0.3' : '1';
-        document.getElementById('setupArea').style.pointerEvents = active ? 'none' : 'auto';
-    }
-
-    // Init
-    updateHUD();
-    resetTimer();
+}).mount('#app');
 </script>
-
 </body>
 </html>
